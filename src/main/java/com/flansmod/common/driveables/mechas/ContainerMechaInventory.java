@@ -93,7 +93,7 @@ public class ContainerMechaInventory extends Container
 				yPos = 25 + 19 * (row - scroll);
 			for(int col = 0; col < ((row + 1) * 8 < numItems ? 8 : numItems % 8); col++)
 			{
-				((Slot)inventorySlots.get(row * 8 + col)).yDisplayPosition = yPos;
+				((Slot)inventorySlots.get(row * 8 + col)).yPos = yPos;
 			}
 		}
 	}
@@ -124,31 +124,25 @@ public class ContainerMechaInventory extends Container
 			{
 				if(!mergeItemStack(slotStack, 0, numItems, false))
 				{
-					return null;
+					return ItemStack.EMPTY;
 				}
 			}
 			else {
 				if(!mergeItemStack(slotStack, numItems, inventorySlots.size(), true))
 				{
-					return null;
+					return ItemStack.EMPTY;
 				}
 			}
 
-			if (slotStack.stackSize == 0)
-			{
-				currentSlot.putStack(null);
-			}
-			else
-			{
+			if (!slotStack.isEmpty())
 				currentSlot.onSlotChanged();
-			}
 
-			if (slotStack.stackSize == stack.stackSize)
+			if (slotStack.getCount() == stack.getCount())
 			{
-				return null;
+				return ItemStack.EMPTY;
 			}
 
-			currentSlot.onPickupFromSlot(player, slotStack);
+			currentSlot.onTake(player, slotStack);
 		}
 
 		return stack;

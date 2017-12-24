@@ -3,20 +3,20 @@ package com.flansmod.common.guns;
 import java.util.Collections;
 import java.util.List;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import javax.annotation.Nullable;
 
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.types.IFlanItem;
 import com.flansmod.common.types.InfoType;
 import com.flansmod.common.vector.Vector3f;
+
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** Implemented from old source. */
 public class ItemBullet extends ItemShootable implements IFlanItem
@@ -45,17 +45,18 @@ public class ItemBullet extends ItemShootable implements IFlanItem
     }
     
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List lines, boolean b)
+	@SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
 	{
 		if(type.description != null)
 		{
-			Collections.addAll(lines, type.description.split("_"));
+			Collections.addAll(tooltip, type.description.split("_"));
 		}
 	}
 
 	//Can be overriden to allow new types of bullets to be created, for planes
 	@Override
-	public EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, double motionX, double motionY, double motionZ,
 			EntityLivingBase shooter,float gunDamage, InfoType shotFrom) 
 	{
@@ -72,7 +73,7 @@ public class ItemBullet extends ItemShootable implements IFlanItem
 
 	//Can be overriden to allow new types of bullets to be created, AA/MG constructor
 	@Override
-	public EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, EntityLivingBase shooter, float spread, float damage,
 			InfoType shotFrom) 
 	{
@@ -96,6 +97,6 @@ public class ItemBullet extends ItemShootable implements IFlanItem
 	@Override
 	public void Shoot(World world, Vector3f origin, Vector3f direction, float damageModifier, float spreadModifier, float speedModifier, InfoType shotFrom, EntityLivingBase shooter) 
 	{
-		world.spawnEntityInWorld(getEntity(world, shooter, spreadModifier, damageModifier, speedModifier, false, shotFrom));
+		world.spawnEntity(getEntity(world, shooter, spreadModifier, damageModifier, speedModifier, false, shotFrom));
 	}
 }

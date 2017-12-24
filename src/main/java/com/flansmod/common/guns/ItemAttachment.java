@@ -3,11 +3,16 @@ package com.flansmod.common.guns;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -38,12 +43,13 @@ public class ItemAttachment extends Item implements IPaintableItem
     	return type.colour;
     }
     
-	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List lines, boolean b)
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
 	{
 		if(type.description != null)
 		{
-			Collections.addAll(lines, type.description.split("_"));
+			Collections.addAll(tooltip, type.description.split("_"));
 		}
 	}
 	
@@ -56,18 +62,18 @@ public class ItemAttachment extends Item implements IPaintableItem
 	// ----------------- Paintjobs -----------------
 	
     @Override
-    public void getSubItems(Item item, CreativeTabs tabs, List list)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items)
     {
-    	PaintableType type = ((IPaintableItem)item).GetPaintableType();
+    	PaintableType type = ((IPaintableItem) this).GetPaintableType();
     	if(FlansMod.addAllPaintjobsToCreative)
     	{
     		for(Paintjob paintjob : type.paintjobs)
-    			addPaintjobToList(item, type, paintjob, list);
+    			addPaintjobToList(this, type, paintjob, items);
     	}
-        else addPaintjobToList(item, type, type.defaultPaintjob, list);
+        else addPaintjobToList(this, type, type.defaultPaintjob, items);
     }
     
-    private void addPaintjobToList(Item item, PaintableType type, Paintjob paintjob, List list)
+    private void addPaintjobToList(Item item, PaintableType type, Paintjob paintjob, NonNullList<ItemStack> list)
     {
     	ItemStack paintableStack = new ItemStack(item, 1, paintjob.ID);
     	NBTTagCompound tags = new NBTTagCompound();

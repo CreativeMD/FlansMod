@@ -1,24 +1,19 @@
 package com.flansmod.common;
 
-import java.util.List;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockFlansWorkbench extends Block
 {
@@ -26,7 +21,7 @@ public class BlockFlansWorkbench extends Block
 	
     public BlockFlansWorkbench(int j, int k)
     {
-        super(Material.iron);
+        super(Material.IRON);
         setHardness(3F);
         setResistance(6F);
         setCreativeTab(FlansMod.tabFlanDriveables);
@@ -34,23 +29,23 @@ public class BlockFlansWorkbench extends Block
     }
     
     @Override
-    public void getSubBlocks(Item item, CreativeTabs tab, List par3List)
+    public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> items)
     {
     	if(tab == FlansMod.tabFlanDriveables)
-    		par3List.add(new ItemStack(item, 1, 0));
+    		items.add(new ItemStack(this, 1, 0));
     	else if(tab == FlansMod.tabFlanGuns)
-    		par3List.add(new ItemStack(item, 1, 1));
+    		items.add(new ItemStack(this, 1, 1));
     	else if(tab == FlansMod.tabFlanParts)
-    		par3List.add(new ItemStack(item, 1, 2));
+    		items.add(new ItemStack(this, 1, 2));
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer entityplayer, EnumFacing side, float par7, float par8, float par9)
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-    	switch(((Integer)world.getBlockState(pos).getValue(TYPE)).intValue())
+    	switch(((Integer)worldIn.getBlockState(pos).getValue(TYPE)).intValue())
     	{
-    	case 0 : if(world.isRemote) entityplayer.openGui(FlansMod.INSTANCE, 0, world, pos.getX(), pos.getY(), pos.getZ()); break;
-    	case 1 : if(!world.isRemote) entityplayer.openGui(FlansMod.INSTANCE, 2, world, pos.getX(), pos.getY(), pos.getZ()); break; 
+    	case 0 : if(worldIn.isRemote) playerIn.openGui(FlansMod.INSTANCE, 0, worldIn, pos.getX(), pos.getY(), pos.getZ()); break;
+    	case 1 : if(!worldIn.isRemote) playerIn.openGui(FlansMod.INSTANCE, 2, worldIn, pos.getX(), pos.getY(), pos.getZ()); break; 
     	}    	
 		return true;
     }
@@ -58,9 +53,9 @@ public class BlockFlansWorkbench extends Block
 
     
     @Override
-    protected BlockState createBlockState()
+    protected BlockStateContainer createBlockState()
     {
-        return new BlockState(this, new IProperty[] {TYPE});
+        return new BlockStateContainer(this, new IProperty[] {TYPE});
     }
     
     @Override

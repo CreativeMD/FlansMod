@@ -2,36 +2,6 @@ package com.flansmod.common.guns;
 
 import java.util.List;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityFX;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSourceIndirect;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
-import net.minecraft.world.World;
-
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-
 import com.flansmod.client.FlansModClient;
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.FlansModExplosion;
@@ -45,6 +15,31 @@ import com.flansmod.common.teams.Team;
 import com.flansmod.common.teams.TeamsManager;
 import com.flansmod.common.types.InfoType;
 import com.flansmod.common.vector.Vector3f;
+
+import io.netty.buffer.ByteBuf;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSourceIndirect;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class EntityGrenade extends EntityShootable implements IEntityAdditionalSpawnData
 {
@@ -116,7 +111,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		}
 		
 		//Visuals
-		if(worldObj.isRemote)
+		if(world.isRemote)
 		{	
 			if(type.trailParticles)
 			{			
@@ -125,9 +120,9 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 				double dZ = (posZ - prevPosZ) / 10;
 				for (int i = 0; i < 10; i++)
 				{
-					EntityFX particle = FlansModClient.getParticle(type.trailParticleType, worldObj, prevPosX + dX * i, prevPosY + dY * i, prevPosZ + dZ * i);
-					if(particle != null && Minecraft.getMinecraft().gameSettings.fancyGraphics)
-						particle.renderDistanceWeight = 100D;
+					Particle particle = FlansModClient.getParticle(type.trailParticleType, world, prevPosX + dX * i, prevPosY + dY * i, prevPosZ + dZ * i);
+					//if(particle != null && Minecraft.getMinecraft().gameSettings.fancyGraphics)
+						//particle.renderDistanceWeight = 100D;
 					//worldObj.spawnEntityInWorld(particle);
 				}
 			}
@@ -141,19 +136,18 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 			//Send flak packet to spawn particles
 			FlansMod.getPacketHandler().sendToAllAround(new PacketFlak(posX, posY, posZ, 50, type.smokeParticleType), posX, posY, posZ, 30, dimension);
 			//
-			List list = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, getEntityBoundingBox().expand(type.smokeRadius, type.smokeRadius, type.smokeRadius));
+			List list = world.getEntitiesWithinAABB(EntityLivingBase.class, getEntityBoundingBox().expand(type.smokeRadius, type.smokeRadius, type.smokeRadius));
 			for(Object obj : list)
 			{
 				EntityLivingBase entity = ((EntityLivingBase)obj);
-				if(entity.getDistanceToEntity(this) < type.smokeRadius)
+				if(entity.getDistance(this) < type.smokeRadius)
 				{
 					//Do some checks first
 					boolean smokeThem = true;
-					for(int i = 0; i < 5; i++)
-					{
+					for (EntityEquipmentSlot slot : EntityEquipmentSlot.values()) {
 						//If any currently equipped item has smoke protection (gas masks), stop the effects
-						ItemStack stack = entity.getEquipmentInSlot(i);
-						if(stack != null && stack.getItem() instanceof ItemTeamArmour)
+						ItemStack stack = entity.getItemStackFromSlot(slot);
+						if(stack.getItem() instanceof ItemTeamArmour)
 						{
 							if(((ItemTeamArmour)stack.getItem()).type.smokeProtection)
 								smokeThem = false;
@@ -172,7 +166,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		}
 		
 		//Detonation conditions
-		if(!worldObj.isRemote)
+		if(!world.isRemote)
 		{
 			if(ticksExisted > type.fuse && type.fuse > 0)
 				detonate();
@@ -180,12 +174,12 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 			if(type.livingProximityTrigger > 0 || type.driveableProximityTrigger > 0)
 			{
 				float checkRadius = Math.max(type.livingProximityTrigger, type.driveableProximityTrigger);
-				List list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox().expand(checkRadius, checkRadius, checkRadius));
+				List list = world.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox().expand(checkRadius, checkRadius, checkRadius));
 				for(Object obj : list)
 				{
 					if(obj == thrower && ticksExisted < 10)
 						continue;
-					if(obj instanceof EntityLivingBase && getDistanceToEntity((Entity)obj) < type.livingProximityTrigger)
+					if(obj instanceof EntityLivingBase && getDistance((Entity)obj) < type.livingProximityTrigger)
 					{
 						//If we are in a gametype and both thrower and triggerer are playing, check for friendly fire
 						if(TeamsManager.getInstance() != null && TeamsManager.getInstance().currentRound != null && obj instanceof EntityPlayerMP && thrower instanceof EntityPlayer)
@@ -198,7 +192,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 						detonate();
 						break;
 					}
-					if(obj instanceof EntityDriveable && getDistanceToEntity((Entity)obj) < type.driveableProximityTrigger)
+					if(obj instanceof EntityDriveable && getDistance((Entity)obj) < type.driveableProximityTrigger)
 					{
 						if(type.damageToTriggerer > 0)
 							((EntityDriveable)obj).attackEntityFrom(getGrenadeDamage(), type.damageToTriggerer);
@@ -210,7 +204,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		}
 
 		//If the block we were stuck to is gone, unstick
-		if(stuck && worldObj.isAirBlock(new BlockPos(stuckToX, stuckToY, stuckToZ)))
+		if(stuck && world.isAirBlock(new BlockPos(stuckToX, stuckToY, stuckToZ)))
 			stuck = false;
 		
 		//Physics and motion (Don't move if stuck)
@@ -227,23 +221,23 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 			Vector3f nextPosVec = Vector3f.add(posVec, motVec, null);
 			
 			//Raytrace the motion of this grenade
-			MovingObjectPosition hit = worldObj.rayTraceBlocks(posVec.toVec3(), nextPosVec.toVec3());
+			RayTraceResult hit = world.rayTraceBlocks(posVec.toVec3(), nextPosVec.toVec3());
 			//If we hit block
-			if(hit != null && hit.typeOfHit == MovingObjectType.BLOCK)
+			if(hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK)
 			{
 				//Get the blockID and block material
-				Block block = worldObj.getBlockState(hit.getBlockPos()).getBlock();
-				Material mat = block.getMaterial();
+				IBlockState state = world.getBlockState(hit.getBlockPos());
+				Material mat = state.getMaterial();
 				
 				//If this grenade detonates on impact, do so
 				if(type.explodeOnImpact)
 					detonate();
 				
 				//If we hit glass and can break it, do so
-				else if(type.breaksGlass && mat == Material.glass && TeamsManager.canBreakGlass)
+				else if(type.breaksGlass && mat == Material.GLASS && TeamsManager.canBreakGlass)
 				{
-					worldObj.setBlockToAir(hit.getBlockPos());
-					FlansMod.proxy.playBlockBreakSound(hit.getBlockPos().getX(), hit.getBlockPos().getY(), hit.getBlockPos().getZ(), block);
+					world.setBlockToAir(hit.getBlockPos());
+					FlansMod.proxy.playBlockBreakSound(hit.getBlockPos().getX(), hit.getBlockPos().getY(), hit.getBlockPos().getZ(), state.getBlock());
 				}
 				
 				//If this grenade does not penetrate blocks, hit the block instead
@@ -349,7 +343,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		if(type.damageVsLiving > 0 && !stuck)
 		{
 			Vector3f motVec = new Vector3f(motionX, motionY, motionZ);
-			List list = worldObj.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
+			List list = world.getEntitiesWithinAABBExcludingEntity(this, getEntityBoundingBox());
 			for(Object obj : list)
 			{
 				if(obj == thrower && ticksExisted < 10 || motVec.lengthSquared() < 0.01D)
@@ -363,7 +357,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		motionY -= 9.81D / 400D * type.fallSpeed;
 		
 		//Temporary fire glitch fix
-		if(worldObj.isRemote)
+		if(world.isRemote)
 			extinguish();
 	}
 	
@@ -390,12 +384,12 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		PacketPlaySound.sendSoundPacket(posX, posY, posZ, FlansMod.soundRange, dimension, type.detonateSound, true);
 		
 		//Explode
-		if(!worldObj.isRemote && type.explosionRadius > 0.1F)
+		if(!world.isRemote && type.explosionRadius > 0.1F)
 		{
 	        if((thrower instanceof EntityPlayer))
-	        	new FlansModExplosion(worldObj, this, (EntityPlayer)thrower, type, posX, posY, posZ, type.explosionRadius, type.fireRadius > 0, type.smokeRadius > 0, type.explosionBreaksBlocks);
+	        	new FlansModExplosion(world, this, (EntityPlayer)thrower, type, posX, posY, posZ, type.explosionRadius, type.fireRadius > 0, type.smokeRadius > 0, type.explosionBreaksBlocks);
 	        else 
-	        	worldObj.createExplosion(this, posX, posY, posZ, type.explosionRadius, TeamsManager.explosions && type.explosionBreaksBlocks);
+	        	world.createExplosion(this, posX, posY, posZ, type.explosionRadius, TeamsManager.explosions && type.explosionBreaksBlocks);
 		}
 		
 		//Make fire
@@ -407,10 +401,10 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 				{
 					for(float k = -type.fireRadius; k < type.fireRadius; k++)
 					{
-						int x = MathHelper.floor_double(i + posX);
-						int y = MathHelper.floor_double(j + posY);
-						int z = MathHelper.floor_double(k + posZ);
-						if(i * i + j * j + k * k <= type.fireRadius * type.fireRadius && worldObj.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.air && rand.nextBoolean())
+						int x = MathHelper.floor(i + posX);
+						int y = MathHelper.floor(j + posY);
+						int z = MathHelper.floor(k + posZ);
+						if(i * i + j * j + k * k <= type.fireRadius * type.fireRadius && world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.AIR && rand.nextBoolean())
 						{
 							/*
 							 if(!worldObj.getBlockState(new BlockPos(x + 1, y, z)).getBlock(). || !worldObj.isAirBlock(new BlockPos(x - 1, y, z)) 
@@ -419,8 +413,8 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 							|| !worldObj.isAirBlock(new BlockPos(x, y, z + 1)) || !worldObj.isAirBlock(new BlockPos(x, y, z - 1))) 
 							*/
 							{
-								worldObj.setBlockState(new BlockPos(x, y, z), Blocks.fire.getDefaultState(), 2);
-								worldObj.markBlockForUpdate(new BlockPos(x, y, z));
+								world.setBlockState(new BlockPos(x, y, z), Blocks.FIRE.getDefaultState(), 2);
+								world.markBlockForUpdate(new BlockPos(x, y, z));
 							}
 						}
 					}
@@ -429,16 +423,16 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 		}
 		
 		//Make explosion particles
-		if(worldObj.isRemote)
+		if(world.isRemote)
 		{
 			for(int i = 0; i < type.explodeParticles; i++)
 			{
-				worldObj.spawnParticle(FlansModClient.getParticleType(type.explodeParticleType), posX, posY, posZ, rand.nextGaussian(), rand.nextGaussian(), rand.nextGaussian());
+				world.spawnParticle(FlansModClient.getParticleType(type.explodeParticleType), posX, posY, posZ, rand.nextGaussian(), rand.nextGaussian(), rand.nextGaussian());
 			}
 		}
 			
 		//Drop item upon detonation, after explosions and whatnot
-		if(!worldObj.isRemote && type.dropItemOnDetonate != null)
+		if(!world.isRemote && type.dropItemOnDetonate != null)
 		{
 			String itemName = type.dropItemOnDetonate;
 			int damage = 0;
@@ -464,7 +458,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 	}
 	
 	@Override
-	public void func_180426_a(double x, double y, double z, float yaw, float pitch, int i, boolean b)
+	public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport)
 	{
 		
 	}
@@ -486,7 +480,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 	protected void readEntityFromNBT(NBTTagCompound tags) 
 	{
 		type = GrenadeType.getGrenade(tags.getString("Type"));
-		thrower = worldObj.getPlayerEntityByName(tags.getString("Thrower"));
+		thrower = world.getPlayerEntityByName(tags.getString("Thrower"));
 		rotationYaw = tags.getFloat("RotationYaw");
 		rotationPitch = tags.getFloat("RotationPitch");
 		axes.setAngles(rotationYaw, rotationPitch, 0F);
@@ -520,7 +514,7 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 	public void readSpawnData(ByteBuf data) 
 	{
 		type = GrenadeType.getGrenade(ByteBufUtils.readUTF8String(data));
-		thrower = (EntityLivingBase)worldObj.getEntityByID(data.readInt());
+		thrower = (EntityLivingBase)world.getEntityByID(data.readInt());
 		setRotation(data.readFloat(), data.readFloat());
 		prevRotationYaw = rotationYaw;
 		prevRotationPitch = rotationPitch;
@@ -542,11 +536,11 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 	}
 	
 	@Override
-	public boolean interactFirst(EntityPlayer player)
+	public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
 	{
 		// Player right clicked on grenade
 		//For deployable bags, give player rewards
-		if(type.isDeployableBag && !worldObj.isRemote)
+		if(type.isDeployableBag && !world.isRemote)
 		{
 			boolean used = false;
 			//Handle healing
@@ -563,9 +557,9 @@ public class EntityGrenade extends EntityShootable implements IEntityAdditionalS
 				used = true;
 			}
 			//Handle ammo
-			if(type.numClips > 0 && player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().getItem() instanceof ItemGun)
+			if(type.numClips > 0 && player.getHeldItemMainhand().getItem() instanceof ItemGun)
 			{
-				GunType gun = ((ItemGun)player.getCurrentEquippedItem().getItem()).GetType();
+				GunType gun = ((ItemGun)player.getHeldItemMainhand().getItem()).GetType();
 				if(gun.ammo.size() > 0)
 				{
 					ShootableType bulletToGive = gun.ammo.get(0);

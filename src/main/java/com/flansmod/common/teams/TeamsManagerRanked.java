@@ -1,19 +1,11 @@
 package com.flansmod.common.teams;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.flansmod.client.gui.GuiDriveableMenu;
 import com.flansmod.client.gui.teams.EnumLoadoutSlot;
 import com.flansmod.client.gui.teams.GuiChooseLoadout;
-import com.flansmod.client.gui.teams.GuiEditLoadout;
-import com.flansmod.client.gui.teams.GuiLandingPage;
-import com.flansmod.client.gui.teams.GuiMissionResults;
-import com.flansmod.client.gui.teams.GuiTeamScores;
-import com.flansmod.client.gui.teams.GuiTeamSelect;
 import com.flansmod.client.teams.ClientTeamsData;
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.PlayerData;
@@ -23,27 +15,18 @@ import com.flansmod.common.network.PacketOpenRewardBox;
 import com.flansmod.common.network.PacketRoundFinished;
 import com.flansmod.common.network.PacketTeamSelect;
 import com.flansmod.common.network.PacketVoting;
-import com.flansmod.common.teams.LoadoutPool.LoadoutEntry;
-import com.flansmod.common.teams.LoadoutPool.LoadoutEntryPaintjob;
-import com.flansmod.common.teams.RoundFinishedData.VotingOption;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.server.FMLServerHandler;
 
 public class TeamsManagerRanked extends TeamsManager
 {
@@ -119,7 +102,7 @@ public class TeamsManagerRanked extends TeamsManager
 		//Get the available teams from the gametype
 		Team[] availableTeams = currentRound.gametype.getTeamsCanSpawnAs(currentRound, player);
 		//Add in the spectators as an option and "none" if the player is an op
-		boolean playerIsOp = MinecraftServer.getServer().getConfigurationManager().canSendCommands(player.getGameProfile());
+		boolean playerIsOp = FMLServerHandler.instance().getServer().getPlayerList().canSendCommands(player.getGameProfile());
 		Team[] allAvailableTeams = new Team[availableTeams.length + (playerIsOp ? 2 : 1)];
 		System.arraycopy(availableTeams, 0, allAvailableTeams, 0, availableTeams.length);
 		allAvailableTeams[availableTeams.length] = Team.spectators;
@@ -183,17 +166,17 @@ public class TeamsManagerRanked extends TeamsManager
 		
 		PlayerData victimData = PlayerHandler.getPlayerData(victim);
 		
-		if(source.getSourceOfDamage() instanceof EntityPlayerMP)
+		if(source.getTrueSource() instanceof EntityPlayerMP)
 		{
-			EntityPlayerMP attacker = ((EntityPlayerMP)source.getSourceOfDamage());
+			EntityPlayerMP attacker = ((EntityPlayerMP)source.getTrueSource());
 			PlayerData attackerData = PlayerHandler.getPlayerData(attacker);
 			if(attackerData != null && attackerData.team != null)
 			{
 				// Make sure players are on opposing teams
 				if(attackerData.team != victimData.team)
 				{
-					AwardXP(attacker, MathHelper.floor_float(currentPool.XPForKill * XPMultiplier));
-					AwardXP(victim, MathHelper.floor_float(currentPool.XPForDeath * XPMultiplier));
+					AwardXP(attacker, MathHelper.floor(currentPool.XPForKill * XPMultiplier));
+					AwardXP(victim, MathHelper.floor(currentPool.XPForDeath * XPMultiplier));
 				}
 			}
 		}

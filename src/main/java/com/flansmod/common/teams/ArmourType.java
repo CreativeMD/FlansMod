@@ -8,6 +8,7 @@ import com.flansmod.common.types.InfoType;
 import com.flansmod.common.types.TypeFile;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -17,7 +18,7 @@ public class ArmourType extends InfoType
 	public static ArrayList<ArmourType> armours = new ArrayList<ArmourType>();
 	
 	/** 0 = Helmet, 1 = Chestplate, 2 = Legs, 3 = Shoes */
-	public int type;
+	public EntityEquipmentSlot type;
 	/** The amount of damage to absorb. From 0 to 1. Stacks additively between armour pieces */
 	public double defence;
 	/** The name for the armour texture. Texture path/name is assets/flansmod/armor/<armourTextureName>_1.png or _2 for legs */
@@ -56,13 +57,13 @@ public class ArmourType extends InfoType
 			if(split[0].equals("Type"))
 			{
 				if(split[1].equals("Hat") || split[1].equals("Helmet"))
-					type = 0;
+					type = EntityEquipmentSlot.HEAD;
 				if(split[1].equals("Chest") || split[1].equals("Body"))
-					type = 1;
+					type = EntityEquipmentSlot.CHEST;
 				if(split[1].equals("Legs") || split[1].equals("Pants"))
-					type = 2;				
+					type = EntityEquipmentSlot.LEGS;				
 				if(split[1].equals("Shoes") || split[1].equals("Boots"))
-					type = 3;
+					type = EntityEquipmentSlot.FEET;
 			}			
 			
 			defence = Read(split, "DamageReduction", defence);

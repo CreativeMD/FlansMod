@@ -2,16 +2,17 @@ package com.flansmod.common.driveables;
 
 import java.util.HashMap;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.IChatComponent;
-
 import com.flansmod.common.guns.ItemBullet;
 import com.flansmod.common.parts.EnumPartCategory;
 import com.flansmod.common.parts.ItemPart;
 import com.flansmod.common.parts.PartType;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.text.TextComponentString;
 
 public class DriveableData implements IInventory
 {
@@ -64,18 +65,18 @@ public class DriveableData implements IInventory
 		missiles = new ItemStack[numMissiles];
 		cargo = new ItemStack[numCargo];
 		for(int i = 0; i < numGuns; i++)
-			ammo[i] = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("Ammo " + i));
+			ammo[i] = new ItemStack(tag.getCompoundTag("Ammo " + i));
 		
 		for(int i = 0; i < numBombs; i++)
-			bombs[i] = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("Bombs " + i));
+			bombs[i] = new ItemStack(tag.getCompoundTag("Bombs " + i));
 
 		for(int i = 0; i < numMissiles; i++)
-			missiles[i] = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("Missiles " + i));
+			missiles[i] = new ItemStack(tag.getCompoundTag("Missiles " + i));
 
  		for(int i = 0; i < numCargo; i++)
-			cargo[i] = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("Cargo " + i));
+			cargo[i] = new ItemStack(tag.getCompoundTag("Cargo " + i));
 
-		fuel = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("Fuel"));
+		fuel = new ItemStack(tag.getCompoundTag("Fuel"));
 		fuelInTank = tag.getInteger("FuelInTank");
 		for(EnumDriveablePart part : EnumDriveablePart.values())
 		{
@@ -179,7 +180,7 @@ public class DriveableData implements IInventory
 						inv = new ItemStack[1];
 						inv[0] = fuel;		
 	
-						setInventorySlotContents(getFuelSlot(), null);
+						setInventorySlotContents(getFuelSlot(), ItemStack.EMPTY);
 					}
 				}
 			}	
@@ -187,29 +188,19 @@ public class DriveableData implements IInventory
 		//Decrease the stack size
 		if(inv[i] != null)
 		{
-			if(inv[i].stackSize <= j)
+			if(inv[i].getCount() <= j)
 			{
 				ItemStack itemstack = inv[i];
 				inv[i] = null;
 				return itemstack;
 			}
 			ItemStack itemstack1 = inv[i].splitStack(j);
-			if(inv[i].stackSize <= 0)
-			{
-				inv[i] = null;
-			}
 			return itemstack1;
 		} else
 		{
-			return null;
+			return ItemStack.EMPTY;
 		}
 		
-	}
-
-	@Override
-	public ItemStack getStackInSlotOnClosing(int i) 
-	{ 
-		return getStackInSlot(i);	
 	}
 
 	@Override
@@ -249,12 +240,6 @@ public class DriveableData implements IInventory
 
 	@Override
 	public void markDirty() {}
-
-	@Override
-	public boolean isUseableByPlayer(EntityPlayer player) 
-	{ 
-		return true; 
-	}
 	
 	public int getAmmoInventoryStart()
 	{
@@ -321,7 +306,7 @@ public class DriveableData implements IInventory
 	}
 
 	@Override
-	public IChatComponent getDisplayName() 
+	public TextComponentString getDisplayName() 
 	{
 		return null;
 	}
@@ -358,5 +343,38 @@ public class DriveableData implements IInventory
 	public void clear() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean isEmpty() {
+		for(int i = 0; i < getSizeInventory(); i++)
+        {
+            if (!getStackInSlot(i).isEmpty())
+            {
+                return false;
+            }
+        }
+		return true;
+	}
+
+	@Override
+	public ItemStack removeStackFromSlot(int index)
+    {
+        ItemStack itemstack = getStackInSlot(index);
+
+        if (itemstack.isEmpty())
+        {
+            return ItemStack.EMPTY;
+        }
+        else
+        {
+        	setInventorySlotContents(index, ItemStack.EMPTY);
+            return itemstack;
+        }
+    }
+
+	@Override
+	public boolean isUsableByPlayer(EntityPlayer player) {
+		return true;
 	}
 }

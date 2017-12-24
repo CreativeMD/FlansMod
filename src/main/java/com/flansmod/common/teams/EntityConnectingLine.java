@@ -9,18 +9,16 @@ public class EntityConnectingLine extends EntityFishHook {
 	
 	public Object connectedTo;
 
-	public EntityConnectingLine(World world) 
+	public EntityConnectingLine(World world, EntityPlayer fishingPlayer) 
 	{
-		super(world);
+		super(world, fishingPlayer);
 	}
 
 	public EntityConnectingLine(World world, EntityPlayer player, ITeamBase base)
     {
-        super(world);
+        super(world, player);
         caughtEntity = this;
         ignoreFrustumCheck = true;
-        angler = player;
-        angler.fishEntity = this;
         setSize(0.25F, 0.25F);
         setPosition(base.getPosX(), base.getPosY(), base.getPosZ());
         motionX = 0;
@@ -31,11 +29,9 @@ public class EntityConnectingLine extends EntityFishHook {
 	   
 	public EntityConnectingLine(World world, EntityPlayer player, ITeamObject object)
     {
-        super(world);
+        super(world, player);
         caughtEntity = this; 
         ignoreFrustumCheck = true;
-        angler = player;
-        angler.fishEntity = this;
         setSize(0.25F, 0.25F);
         setPosition(object.getPosX(), object.getPosY(), object.getPosZ());
         motionX = 0;
@@ -47,11 +43,11 @@ public class EntityConnectingLine extends EntityFishHook {
     @Override
 	public void onUpdate()
     {          
-    	ItemStack currentItemstack = angler.inventory.getCurrentItem();
-    	if(currentItemstack == null || !(currentItemstack.getItem() instanceof ItemOpStick) || currentItemstack.getItemDamage() != 1)
+    	ItemStack currentItemstack = getAngler().inventory.getCurrentItem();
+    	if(currentItemstack.isEmpty() || !(currentItemstack.getItem() instanceof ItemOpStick) || currentItemstack.getItemDamage() != 1)
     	{
     		setDead();
-    		angler.fishEntity = null;
+    		getAngler().fishEntity = null;
     	}
     }
 

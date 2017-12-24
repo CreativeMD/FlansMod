@@ -3,40 +3,21 @@ package com.flansmod.client.gui;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
-
 import com.flansmod.client.ClientProxy;
 import com.flansmod.client.FlansModResourceHandler;
-import com.flansmod.client.model.GunAnimations;
 import com.flansmod.client.model.ModelAttachment;
 import com.flansmod.client.model.ModelDriveable;
-import com.flansmod.client.model.ModelPlane;
 import com.flansmod.client.model.RenderGun;
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.RotatedAxes;
 import com.flansmod.common.driveables.DriveableType;
-import com.flansmod.common.guns.GunType;
-import com.flansmod.common.guns.ItemGun;
 import com.flansmod.common.guns.Paintjob;
 import com.flansmod.common.network.PacketGunPaint;
 import com.flansmod.common.paintjob.ContainerPaintjobTable;
@@ -45,6 +26,16 @@ import com.flansmod.common.types.EnumType;
 import com.flansmod.common.types.IPaintableItem;
 import com.flansmod.common.types.PaintableType;
 import com.flansmod.common.vector.Vector3f;
+
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 
 public class GuiPaintjobTable extends GuiContainer 
 {
@@ -162,7 +153,7 @@ public class GuiPaintjobTable extends GuiContainer
 		
         for(int i = 0; i < 4 * 9 + 2; i++)
         {
-        	inventorySlots.getSlot(i).xDisplayPosition += dPos;
+        	inventorySlots.getSlot(i).xPos += dPos;
         }
         
         if(movingFlatTextureWindow)
@@ -199,8 +190,8 @@ public class GuiPaintjobTable extends GuiContainer
             //int xOrigin = ((width - xSize) / 2)  + GetMainPageX();
             //int yOrigin = ((height - ySize) / 2) + GetMainPageY();
             
-    		fontRendererObj.drawString("Inventory", GetMainPageX() + 8, GetMainPageY() + (ySize - 94) + 2, 0x404040);
-    		fontRendererObj.drawString("Paintjob Table", GetMainPageX() + 8, GetMainPageY() + 6, 0x404040);
+    		fontRenderer.drawString("Inventory", GetMainPageX() + 8, GetMainPageY() + (ySize - 94) + 2, 0x404040);
+    		fontRenderer.drawString("Paintjob Table", GetMainPageX() + 8, GetMainPageY() + 6, 0x404040);
         }
         
         // Render custom screen
@@ -209,9 +200,9 @@ public class GuiPaintjobTable extends GuiContainer
             int xOrigin = ((width - xSize) / 2)  + GetCustomPageX() - 32;
             int yOrigin = ((height - ySize) / 2) + GetCustomPageY();
             
-    		fontRendererObj.drawString("Confirm", xOrigin - 7, yOrigin + 169, 0x000000);
-    		fontRendererObj.drawString("Cancel", xOrigin - 6, yOrigin + 186, 0x000000);
-    		fontRendererObj.drawString("Inventory", xOrigin - 12, yOrigin + 203, 0x000000);
+    		fontRenderer.drawString("Confirm", xOrigin - 7, yOrigin + 169, 0x000000);
+    		fontRenderer.drawString("Cancel", xOrigin - 6, yOrigin + 186, 0x000000);
+    		fontRenderer.drawString("Inventory", xOrigin - 12, yOrigin + 203, 0x000000);
         }
 
         Vector3f renderOrigin = GetRenderOrigin();
@@ -353,13 +344,13 @@ public class GuiPaintjobTable extends GuiContainer
     	        	boolean[] haveDyes = new boolean[numDyes];
     	        	for(int n = 0; n < numDyes; n++)
     	        	{
-    	        		int amountNeeded = hoveringOver.dyesNeeded[n].stackSize;
+    	        		int amountNeeded = hoveringOver.dyesNeeded[n].getCount();
     	        		for(int s = 0; s < inventory.getSizeInventory(); s++)
     	        		{
     	        			ItemStack stack = inventory.getStackInSlot(s);
-    	        			if(stack != null && stack.getItem() == Items.dye && stack.getItemDamage() == hoveringOver.dyesNeeded[n].getItemDamage())
+    	        			if(stack.getItem() == Items.DYE && stack.getItemDamage() == hoveringOver.dyesNeeded[n].getItemDamage())
     	        			{
-    	        				amountNeeded -= stack.stackSize;
+    	        				amountNeeded -= stack.getCount();
     	        			}
     	        		}
     					if(amountNeeded <= 0)
@@ -394,7 +385,7 @@ public class GuiPaintjobTable extends GuiContainer
     	        	for(int s = 0; s < numDyes; s++)
     	        	{
     	        		itemRender.renderItemIntoGUI(hoveringOver.dyesNeeded[s], originX + 3 + s * 18, originY + 3);
-    	        		itemRender.renderItemOverlayIntoGUI(this.fontRendererObj, hoveringOver.dyesNeeded[s], originX + 3 + s * 18, originY + 3, null);
+    	        		itemRender.renderItemOverlayIntoGUI(this.fontRenderer, hoveringOver.dyesNeeded[s], originX + 3 + s * 18, originY + 3, null);
     	        	}
             	}
             }

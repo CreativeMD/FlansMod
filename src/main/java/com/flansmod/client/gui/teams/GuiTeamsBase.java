@@ -14,15 +14,12 @@ import com.flansmod.common.types.EnumPaintjobRarity;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 public class GuiTeamsBase extends GuiScreen 
 {
@@ -38,7 +35,7 @@ public class GuiTeamsBase extends GuiScreen
 	{
 		super();
 		mc = Minecraft.getMinecraft();
-		player = mc.thePlayer;
+		player = mc.player;
 		itemRenderer = mc.getRenderItem();
 	}
 	
@@ -85,11 +82,11 @@ public class GuiTeamsBase extends GuiScreen
 		{
 			
 			drawModalRectWithCustomSizedTexture(i, j, 259, 28, 46, 111, textureX, textureY);
-			drawCenteredString(fontRendererObj, "Unlocks", i + 23, j + 23, 0xffffff);
-			drawCenteredString(fontRendererObj, "at " + pool.slotUnlockLevels[n], i + 23, j + 40, 0xffffff);
+			drawCenteredString(fontRenderer, "Unlocks", i + 23, j + 23, 0xffffff);
+			drawCenteredString(fontRenderer, "at " + pool.slotUnlockLevels[n], i + 23, j + 40, 0xffffff);
 		}
 		
-		drawCenteredString(fontRendererObj, "Slot " + (n + 1), i + 23, j + 5, 0xffffff);
+		drawCenteredString(fontRenderer, "Slot " + (n + 1), i + 23, j + 5, 0xffffff);
 	}
 	
 	protected void DrawRarityBackground(EnumPaintjobRarity rarity, int i, int j)
@@ -145,7 +142,7 @@ public class GuiTeamsBase extends GuiScreen
 				GL11.glRotatef(10, 0F, 1F, 0F);
 				GL11.glScalef(-scale, scale, scale);
 				//ClientProxy.gunRenderer.renderGun(gunStack, gunType, 1F / 16F, gunType.model, GunAnimations.defaults, 0F);
-				ClientProxy.gunRenderer.renderItem(ItemRenderType.ENTITY, stack);
+				ClientProxy.gunRenderer.renderItem(ItemRender.ENTITY, stack);
 				
 				RenderHelper.disableStandardItemLighting();
 				
@@ -171,7 +168,7 @@ public class GuiTeamsBase extends GuiScreen
 		if(itemstack == null || itemstack.getItem() == null)
 			return;
 		itemRenderer.renderItemIntoGUI(itemstack, i, j);
-		itemRenderer.renderItemOverlayIntoGUI(fontRendererObj, itemstack, i, j, null);
+		itemRenderer.renderItemOverlayIntoGUI(fontRenderer, itemstack, i, j, null);
 	}
 	
 	@Override

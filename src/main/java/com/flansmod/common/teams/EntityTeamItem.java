@@ -3,6 +3,7 @@ package com.flansmod.common.teams;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
@@ -38,12 +39,6 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 	{
 		super(world);
 	}
-	
-	@Override
-	public void func_180426_a(double x, double y, double z, float yaw, float pitch, int i, boolean b)
-	{
-		
-	}
 		
 	@Override
 	public void onUpdate()
@@ -54,14 +49,14 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 		prevPosZ = posZ;
 		prevRotationYaw = rotationYaw;
 		++age;
-		if(worldObj.isRemote)
+		if(world.isRemote)
 		{
 			angle += 0.05D;
 			setPosition(xCoord + 0.5F + Math.cos(angle) * 0.3F, yCoord + 0.5F, zCoord + 0.5F + Math.sin(angle) * 0.3F);
 		}
 
 		//Temporary fire glitch fix
-		if(worldObj.isRemote)
+		if(world.isRemote)
 			extinguish();
 	}
 
@@ -73,7 +68,7 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 	@Override
 	public void onCollideWithPlayer(EntityPlayer player)
 	{
-		if (!worldObj.isRemote)
+		if (!world.isRemote)
 		{
 			EntityItemPickupEvent event = new EntityItemPickupEvent(player, this);
 
@@ -92,17 +87,17 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 			}
 
 			//Getter of EntityItem
-			int var2 = getEntityItem().stackSize;
+			int var2 = getItem().getCount();
 
-			if ((event.getResult() == Result.ALLOW || var2 <= 0 || player.inventory.addItemStackToInventory(getEntityItem())))
+			if ((event.getResult() == Result.ALLOW || var2 <= 0 || player.inventory.addItemStackToInventory(getItem())))
 			{
 				FMLCommonHandler.instance().firePlayerItemPickupEvent(player, this);
 
-				playSound("random.pop", 0.2F, ((rand.nextFloat() - rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+				playSound(SoundEvents.BLOCK_LAVA_POP, 0.2F, ((rand.nextFloat() - rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
 				player.onItemPickup(this, var2);
 
 				//Getter of EntityItem
-				if (getEntityItem().stackSize <= 0)
+				if (getItem().isEmpty())
 				{
 					spawner.itemEntities.remove(this);
 					setDead();
@@ -129,7 +124,7 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 		data.writeDouble(angle);
 		NBTTagCompound tags = new NBTTagCompound();
 		//Getter of EntityItem
-		getEntityItem().writeToNBT(tags);
+		getItem().writeToNBT(tags);
 		ByteBufUtils.writeTag(data, tags);
 	}
 
@@ -140,7 +135,7 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 		yCoord = data.readInt();
 		zCoord = data.readInt();
 		angle = data.readDouble();
-		setEntityItemStack(ItemStack.loadItemStackFromNBT(ByteBufUtils.readTag(data)));
+		setItem(new ItemStack(ByteBufUtils.readTag(data)));
 	}
 	
 	@Override
@@ -150,10 +145,10 @@ public class EntityTeamItem extends EntityItemCustomRender implements IEntityAdd
 	}
 	
 	@Override
-	public boolean canAttackWithItem()
-	{
-		return false;
-	}
+	public boolean canBeAttackedWithItem()
+    {
+        return true;
+    }
 
 	@Override
 	public boolean isBurning()

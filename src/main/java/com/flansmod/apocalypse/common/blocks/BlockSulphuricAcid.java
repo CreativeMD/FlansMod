@@ -6,12 +6,12 @@ import com.flansmod.common.FlansMod;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.property.ExtendedBlockState;
@@ -21,6 +21,8 @@ import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockSulphuricAcid extends BlockFluidClassic
 {
@@ -42,7 +44,7 @@ public class BlockSulphuricAcid extends BlockFluidClassic
     }
 	
 	@Override
-	protected BlockState createBlockState()
+	protected BlockStateContainer createBlockState()
 	{
 		return new ExtendedBlockState(this, new IProperty[] {LEVEL}, new IUnlistedProperty[] {HEIGHT_SW, HEIGHT_NW, HEIGHT_SE, HEIGHT_NE, FLOW_DIRECTION, LEVEL_CORNERS[0], LEVEL_CORNERS[1], LEVEL_CORNERS[2], LEVEL_CORNERS[3]});
 	}
@@ -88,11 +90,12 @@ public class BlockSulphuricAcid extends BlockFluidClassic
 	}
 	
 	@Override
-	public boolean shouldSideBeRendered(IBlockAccess world, BlockPos pos, EnumFacing side)
+	@SideOnly(Side.CLIENT)
+    public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess world, BlockPos pos, EnumFacing side)
 	{
 		if(side == EnumFacing.UP)
 			return world.getBlockState(pos).getBlock() != this;
-		else return super.shouldSideBeRendered(world, pos, side);
+		else return super.shouldSideBeRendered(blockState, world, pos, side);
 	}
 	
 	@Override

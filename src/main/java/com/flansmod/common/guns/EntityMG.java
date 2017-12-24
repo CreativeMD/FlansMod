@@ -4,27 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import io.netty.buffer.ByteBuf;
-
 import org.lwjgl.input.Mouse;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.PlayerHandler;
@@ -34,6 +14,25 @@ import com.flansmod.common.network.PacketPlaySound;
 import com.flansmod.common.teams.EntityGunItem;
 import com.flansmod.common.teams.Team;
 import com.flansmod.common.teams.TeamsManager;
+
+import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 {
@@ -99,9 +98,9 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 		{
 			setDead();
 		}
-		if (worldObj.getBlockState(new BlockPos(blockX, blockY - 1, blockZ)).getBlock() == Blocks.air)
+		if (world.getBlockState(new BlockPos(blockX, blockY - 1, blockZ)).getBlock() == Blocks.AIR)
 		{
-			if(!worldObj.isRemote)
+			if(!world.isRemote)
 			{
 				setDead();
 			}
@@ -167,12 +166,12 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 				PacketPlaySound.sendSoundPacket(posX, posY, posZ, FlansMod.soundRange, dimension, type.reloadSound, false);
 			}
 		}
-		if (worldObj.isRemote && gunner != null && gunner == FMLClientHandler.instance().getClient().thePlayer && type.mode == EnumFireMode.FULLAUTO)
+		if (world.isRemote && gunner != null && gunner == FMLClientHandler.instance().getClient().player && type.mode == EnumFireMode.FULLAUTO)
 		{
 			//Send a packet!
 			checkForShooting();
 		}
-		if(!worldObj.isRemote && isShooting)
+		if(!world.isRemote && isShooting)
 		{
 			if(gunner == null || gunner.isDead)
 				isShooting = false;
@@ -186,8 +185,8 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 			if (gunner != null && !gunner.capabilities.isCreativeMode)
 				ammo.damageItem(1, gunner);
 			shootDelay = type.shootDelay;
-			worldObj.spawnEntityInWorld(((ItemBullet)ammo.getItem()).getEntity(worldObj, 
-					new Vec3(blockX + 0.5D, blockY + type.pivotHeight, blockZ + 0.5D), 
+			world.spawnEntityInWorld(((ItemBullet)ammo.getItem()).getEntity(world, 
+					new Vec3d(blockX + 0.5D, blockY + type.pivotHeight, blockZ + 0.5D), 
 					(direction * 90F + rotationYaw), 
 					rotationPitch, 
 					gunner, 
@@ -231,7 +230,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 	{
 		if (damagesource.damageType.equals("player"))
 		{
-			Entity player = damagesource.getEntity();
+			Entity player = damagesource.getTrueSource();
 			if (player == gunner)
 			{
 				// Player left clicked on the gun
@@ -247,9 +246,9 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 				if (gunner != null && !gunner.capabilities.isCreativeMode)
 					ammo.damageItem(1, (EntityLiving) player);
 				shootDelay = type.shootDelay;
-				if (!worldObj.isRemote)
+				if (!world.isRemote)
 				{
-					worldObj.spawnEntityInWorld(((ItemBullet)ammo.getItem()).getEntity(worldObj, 
+					world.spawnEntity(((ItemBullet)ammo.getItem()).getEntity(world, 
 							(EntityLivingBase) player, 
 							bullet.bulletSpread * type.bulletSpread, 
 							type.damage, 
@@ -277,7 +276,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 	}
 
 	@Override
-	public boolean interactFirst(EntityPlayer player) //interact : change back when Forge updates
+	public boolean processInitialInteract(EntityPlayer player, EnumHand hand) //interact : change back when Forge updates
 	{
 		// Player right clicked on gun
 		// Mount gun
@@ -285,7 +284,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 		{
 			return true;
 		}
-		if (!worldObj.isRemote)
+		if (!world.isRemote)
 		{
 			//If this is the player currently using this MG, dismount
 			if(gunner == player)
@@ -317,7 +316,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 					ammo = player.inventory.getStackInSlot(slot);
 					player.inventory.setInventorySlotContents(slot, null);
 					reloadTimer = type.reloadTime;
-					worldObj.playSoundAtEntity(this, type.reloadSound, 1.0F, 1.0F / (rand.nextFloat() * 0.4F + 0.8F));
+					world.playSound(this, type.reloadSound, 1.0F, 1.0F / (rand.nextFloat() * 0.4F + 0.8F));
 				}
 			}
 			
@@ -329,7 +328,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 	{
 		if(player == null)
 			return;
-		Side side = worldObj.isRemote ? Side.CLIENT : Side.SERVER;
+		Side side = world.isRemote ? Side.CLIENT : Side.SERVER;
 		if(PlayerHandler.getPlayerData(player, side) == null)
 			return;
 		if(mounting)
@@ -361,12 +360,12 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 	public void setDead()
 	{
 		// Drop gun
-		if(!worldObj.isRemote)
+		if(!world.isRemote)
 		{
 			if(TeamsManager.weaponDrops == 2)
 			{
-				EntityGunItem gunEntity = new EntityGunItem(worldObj, posX, posY, posZ, new ItemStack(type.getItem()), Arrays.asList(ammo));
-				worldObj.spawnEntityInWorld(gunEntity);
+				EntityGunItem gunEntity = new EntityGunItem(world, posX, posY, posZ, new ItemStack(type.getItem()), Arrays.asList(ammo));
+				world.spawnEntity(gunEntity);
 			}
 			else if(TeamsManager.weaponDrops == 1)
 			{
@@ -404,7 +403,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 		blockY = nbttagcompound.getInteger("BlockY");
 		blockZ = nbttagcompound.getInteger("BlockZ");
 		direction = nbttagcompound.getByte("Dir");
-		ammo = ItemStack.loadItemStackFromNBT(nbttagcompound.getCompoundTag("Ammo"));
+		ammo = new ItemStack(nbttagcompound.getCompoundTag("Ammo"));
 	}
 
 	@Override
@@ -444,7 +443,7 @@ public class EntityMG extends Entity implements IEntityAdditionalSpawnData
 	}
 	
 	@Override
-	public ItemStack getPickedResult(MovingObjectPosition target)
+	public ItemStack getPickedResult(RayTraceResult target)
 	{
 		ItemStack stack = new ItemStack(type.item, 1, 0);
 		return stack;

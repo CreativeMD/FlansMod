@@ -5,19 +5,6 @@ import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.client.FMLClientHandler;
-
 import com.flansmod.client.FlansModResourceHandler;
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.driveables.DriveableType;
@@ -26,6 +13,19 @@ import com.flansmod.common.parts.EnumPartCategory;
 import com.flansmod.common.parts.ItemPart;
 import com.flansmod.common.parts.PartType;
 import com.flansmod.common.types.EnumType;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.client.FMLClientHandler;
 
 public class GuiDriveableCrafting extends GuiScreen 
 {
@@ -86,7 +86,7 @@ public class GuiDriveableCrafting extends GuiScreen
 	public void drawScreen(int i, int j, float f)
 	{
 		String recipeName;
-		ScaledResolution scaledresolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
+		ScaledResolution scaledresolution = new ScaledResolution(mc);
 		int w = scaledresolution.getScaledWidth();
 		int h = scaledresolution.getScaledHeight();
 		drawDefaultBackground();
@@ -99,9 +99,9 @@ public class GuiDriveableCrafting extends GuiScreen
 		//Draw the background
 		drawTexturedModalRect(guiOriginX, guiOriginY, 0, 0, 176, 198);
 		
-		drawString(fontRendererObj, "Vehicle Crafting", guiOriginX + 6, guiOriginY + 6, 0xffffff);
-		drawString(fontRendererObj, "Requires", guiOriginX + 6, guiOriginY + 125, 0xffffff);
-		drawString(fontRendererObj, "Engine", guiOriginX + 114, guiOriginY + 141, 0xffffff);
+		drawString(fontRenderer, "Vehicle Crafting", guiOriginX + 6, guiOriginY + 6, 0xffffff);
+		drawString(fontRenderer, "Requires", guiOriginX + 6, guiOriginY + 125, 0xffffff);
+		drawString(fontRenderer, "Engine", guiOriginX + 114, guiOriginY + 141, 0xffffff);
 				
 		for(int m = 0; m < 2; m++)
 		{
@@ -175,12 +175,12 @@ public class GuiDriveableCrafting extends GuiScreen
 				recipeName = recipeName.substring(0, 15) + "...";
 			
 			//Render the info text alongside the driveable
-			drawString(fontRendererObj, recipeName , guiOriginX + 82, guiOriginY + 64, 0xffffff);
-			drawString(fontRendererObj, "Cargo Slots : " + selectedType.numCargoSlots, guiOriginX + 82, guiOriginY + 74, 0xffffff);
-			drawString(fontRendererObj, "Bomb Slots : " + selectedType.numBombSlots, guiOriginX + 82, guiOriginY + 84, 0xffffff);
-			drawString(fontRendererObj, "Passengers : " + selectedType.numPassengers, guiOriginX + 82, guiOriginY + 94, 0xffffff);
-			drawString(fontRendererObj, "Guns : " + (selectedType.ammoSlots()), guiOriginX + 82, guiOriginY + 104, 0xffffff);
-			drawString(fontRendererObj, selectedType.numEngines() + "x", guiOriginX + 100, guiOriginY + 141, 0xffffff);
+			drawString(fontRenderer, recipeName , guiOriginX + 82, guiOriginY + 64, 0xffffff);
+			drawString(fontRenderer, "Cargo Slots : " + selectedType.numCargoSlots, guiOriginX + 82, guiOriginY + 74, 0xffffff);
+			drawString(fontRenderer, "Bomb Slots : " + selectedType.numBombSlots, guiOriginX + 82, guiOriginY + 84, 0xffffff);
+			drawString(fontRenderer, "Passengers : " + selectedType.numPassengers, guiOriginX + 82, guiOriginY + 94, 0xffffff);
+			drawString(fontRenderer, "Guns : " + (selectedType.ammoSlots()), guiOriginX + 82, guiOriginY + 104, 0xffffff);
+			drawString(fontRenderer, selectedType.numEngines() + "x", guiOriginX + 100, guiOriginY + 141, 0xffffff);
 			
 			//Create a temporary copy of the player inventory in order to work out whether the player has each of the itemstacks required
 			InventoryPlayer temporaryInventory = new InventoryPlayer(null);
@@ -207,26 +207,23 @@ public class GuiDriveableCrafting extends GuiScreen
 							//Get the stack in each slot
 							ItemStack stackInSlot = temporaryInventory.getStackInSlot(n);
 							//If the stack is what we want
-							if(stackInSlot != null && stackInSlot.getItem() == recipeStack.getItem() && stackInSlot.getItemDamage() == recipeStack.getItemDamage())
+							if(stackInSlot.getItem() == recipeStack.getItem() && stackInSlot.getItemDamage() == recipeStack.getItemDamage())
 							{
 								//Work out the amount to take from the stack
-								int amountFound = Math.min(stackInSlot.stackSize, recipeStack.stackSize - totalAmountFound);
+								int amountFound = Math.min(stackInSlot.getCount(), recipeStack.getCount() - totalAmountFound);
 								//Take it
-								stackInSlot.stackSize -= amountFound;
-								//Check for empty stacks
-								if(stackInSlot.stackSize <= 0)
-									stackInSlot = null;
+								stackInSlot.shrink(amountFound);
 								//Put the modified stack back in the inventory
 								temporaryInventory.setInventorySlotContents(n, stackInSlot);
 								//Increase the amount found counter
 								totalAmountFound += amountFound;
 								//If we have enough, stop looking
-								if(totalAmountFound == recipeStack.stackSize)
+								if(totalAmountFound == recipeStack.getCount())
 									break;
 							}
 						}
 						//If we didn't find enough, give the stack a red outline
-						if(totalAmountFound < recipeStack.stackSize)
+						if(totalAmountFound < recipeStack.getCount())
 						{
 							mc.renderEngine.bindTexture(texture);
 							drawTexturedModalRect(guiOriginX + 8 + c * 18, guiOriginY + 138 + r * 18, 195, 11, 16, 16);
@@ -256,7 +253,7 @@ public class GuiDriveableCrafting extends GuiScreen
 						//If we already have engines of this type, add these ones to the stack
 						if(engines.containsKey(partType))
 						{
-							engines.get(partType).stackSize += stackInSlot.stackSize;
+							engines.get(partType).grow(stackInSlot.getCount());
 						}
 						//Else, make this the first stack
 						else engines.put(partType, stackInSlot);
@@ -270,7 +267,7 @@ public class GuiDriveableCrafting extends GuiScreen
 			for(PartType part : engines.keySet())
 			{
 				//If this engine outperforms the currently selected best one and there are enough of them, swap
-				if(part.engineSpeed > bestEngineSpeed && engines.get(part).stackSize >= selectedType.numEngines())
+				if(part.engineSpeed > bestEngineSpeed && engines.get(part).getCount() >= selectedType.numEngines())
 				{
 					bestEngineSpeed = part.engineSpeed;
 					bestEngineStack = engines.get(part);
@@ -297,7 +294,7 @@ public class GuiDriveableCrafting extends GuiScreen
 		{
 			mc.renderEngine.bindTexture(texture);
 			drawTexturedModalRect(guiOriginX + 108, guiOriginY + 160, 176, 28, 44, 24);
-			drawString(fontRendererObj, "Craft", guiOriginX + 116, guiOriginY + 168, 0xa0a0a0);
+			drawString(fontRenderer, "Craft", guiOriginX + 116, guiOriginY + 168, 0xa0a0a0);
 		}
 		//If we can craft it, draw the button for crafting
 		else
@@ -312,7 +309,7 @@ public class GuiDriveableCrafting extends GuiScreen
 		if(itemstack == null || itemstack.getItem() == null)
 			return;
 		itemRenderer.renderItemIntoGUI(itemstack, i, j);
-		itemRenderer.renderItemOverlayIntoGUI(fontRendererObj, itemstack, i, j, null);
+		itemRenderer.renderItemOverlayIntoGUI(fontRenderer, itemstack, i, j, null);
 	}
 	
 	@Override
@@ -320,7 +317,7 @@ public class GuiDriveableCrafting extends GuiScreen
 	{
 		if (i == 1 || i == mc.gameSettings.keyBindInventory.getKeyCode())
 		{
-			mc.thePlayer.closeScreen();
+			mc.player.closeScreen();
 		}
 	}
 	

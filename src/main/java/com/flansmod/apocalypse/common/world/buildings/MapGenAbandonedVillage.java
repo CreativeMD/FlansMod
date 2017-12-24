@@ -1,21 +1,15 @@
 package com.flansmod.apocalypse.common.world.buildings;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import com.flansmod.apocalypse.common.world.BiomeGenApocalypse;
-import com.flansmod.apocalypse.common.world.buildings.StructureAbandonedVillagePieces.Field1;
-import com.flansmod.apocalypse.common.world.buildings.StructureAbandonedVillagePieces.Field2;
-import com.flansmod.apocalypse.common.world.buildings.StructureAbandonedVillagePieces.Well;
 
-import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.structure.MapGenStructure;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureComponent;
@@ -23,7 +17,7 @@ import net.minecraft.world.gen.structure.StructureStart;
 
 public class MapGenAbandonedVillage extends MapGenStructure
 {
-	public static List<BiomeGenBase> villageSpawnBiomes = Arrays.asList(new BiomeGenBase[] {BiomeGenApocalypse.canyon, BiomeGenApocalypse.desert});
+	public static List<Biome> villageSpawnBiomes = Arrays.asList(new Biome[] {BiomeGenApocalypse.canyon, BiomeGenApocalypse.desert});
 	
 	private int terrainType;
 	/** Distance between villages? */
@@ -55,7 +49,7 @@ public class MapGenAbandonedVillage extends MapGenStructure
 		
 		int xScaled = xAdjusted / distance;
 		int zScaled = zAdjusted / distance;
-		Random rand = worldObj.setRandomSeed(xScaled, zScaled, 10387312);
+		Random rand = world.setRandomSeed(xScaled, zScaled, 10387312);
 		//De-scale. Get co-ordinates of the corner of this village-spawning-area
 		xScaled *= distance;
 		zScaled *= distance;
@@ -63,7 +57,7 @@ public class MapGenAbandonedVillage extends MapGenStructure
 		xScaled += rand.nextInt(distance - something);
 		zScaled += rand.nextInt(distance - something);
 		
-		if(xAdjusted == xScaled && zAdjusted == zScaled && worldObj.getWorldChunkManager().areBiomesViable(xAdjusted * 16 + 8, zAdjusted * 16 + 8, 0, villageSpawnBiomes))
+		if(xAdjusted == xScaled && zAdjusted == zScaled && world.getWorldChunkManager().areBiomesViable(xAdjusted * 16 + 8, zAdjusted * 16 + 8, 0, villageSpawnBiomes))
 		{
 			return true;
 		}
@@ -75,7 +69,7 @@ public class MapGenAbandonedVillage extends MapGenStructure
 	@Override
 	protected StructureStart getStructureStart(int x, int z) 
 	{
-		return new Start(worldObj, rand, x, z, terrainType);
+		return new Start(world, rand, x, z, terrainType);
 	}
 
 	public static class Start extends StructureStart

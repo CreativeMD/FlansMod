@@ -1,34 +1,28 @@
 package com.flansmod.common.teams;
 
-import java.util.List;
+import com.flansmod.client.FlansModClient;
+import com.flansmod.common.FlansMod;
 
 import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockFence;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.flansmod.client.FlansModClient;
-import com.flansmod.common.FlansMod;
 
 public class BlockSpawner extends BlockContainer
 {
@@ -43,49 +37,38 @@ public class BlockSpawner extends BlockContainer
 	}
 
     @Override
-    public void getSubBlocks(Item item, CreativeTabs tab, List list)
+    public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items)
     {
-    	if(tab == FlansMod.tabFlanTeams)
+    	if(itemIn == FlansMod.tabFlanTeams)
     	{
-	        list.add(new ItemStack(item, 1, 0));
-	        list.add(new ItemStack(item, 1, 1));
-	        list.add(new ItemStack(item, 1, 2));
+    		items.add(new ItemStack(this, 1, 0));
+    		items.add(new ItemStack(this, 1, 1));
+    		items.add(new ItemStack(this, 1, 2));
     	}
     }
     
     @Override
-    public AxisAlignedBB getCollisionBoundingBox(World par1World, BlockPos pos, IBlockState state)
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
     {
         return null;
     }
     
     @Override
-    public boolean isFullCube()
+    public boolean isFullCube(IBlockState state)
     {
         return false;
     }
     
     @Override
-    public boolean isOpaqueCube()
+    public boolean isOpaqueCube(IBlockState state)
     {
         return false;
-    }
-    
-    @Override
-    public int getRenderType()
-    {
-        return 3;
     }
     
     @Override
     public boolean canPlaceBlockAt(World par1World, BlockPos pos)
     {
-        return par1World.doesBlockHaveSolidTopSurface(par1World, pos.add(0, -1, 0));
-    }
-    
-    @Override
-    public void onEntityCollidedWithBlock(World par1World, BlockPos pos, Entity par5Entity)
-    {
+    	return par1World.isSideSolid(pos.down(), EnumFacing.UP);
     }
     
     @Override
@@ -93,12 +76,6 @@ public class BlockSpawner extends BlockContainer
     {
     	setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.0625F, 1.0F);
     }
-
-	@Override
-	public int getMobilityFlag()
-	{
-		return 1;
-	}
 
 	@Override
 	public TileEntity createNewTileEntity(World var1, int i)
@@ -140,22 +117,24 @@ public class BlockSpawner extends BlockContainer
 	}
 	
     @Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float par7, float par8, float par9)
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
+    	if(hand == EnumHand.OFF_HAND)
+    		return false;
     	if(world.isRemote)
     		return true;
     	/* TODO : Check the generalised code in TeamsManager works
     	if(TeamsManager.getInstance().currentGametype != null)
     		TeamsManager.getInstance().currentGametype.objectClickedByPlayer((TileEntitySpawner)world.getTileEntity(x, y, z), (EntityPlayerMP)player);
     	*/
-    	if(MinecraftServer.getServer().getConfigurationManager().canSendCommands(player.getGameProfile()))
+    	if(player.getServer().getPlayerList().canSendCommands(player.getGameProfile()))
     	{
     		TileEntitySpawner spawner = (TileEntitySpawner)world.getTileEntity(pos);
-    		ItemStack item = player.getCurrentEquippedItem();
+    		ItemStack item = player.getHeldItemMainhand();
     		if(item == null || item.getItem() == null)
     		{
     			spawner.spawnDelay = (spawner.spawnDelay + 200) % 6000;
-    			player.addChatMessage(new ChatComponentText("Set spawn delay to " + spawner.spawnDelay / 20));
+    			player.sendMessage(new TextComponentString("Set spawn delay to " + spawner.spawnDelay / 20));
     		}
     		else if(!(item.getItem() instanceof ItemOpStick))
     		{
@@ -171,9 +150,9 @@ public class BlockSpawner extends BlockContainer
     }
     
     @Override
-    protected BlockState createBlockState()
+    protected BlockStateContainer createBlockState()
     {
-        return new BlockState(this, new IProperty[] {TYPE});
+        return new BlockStateContainer(this, new IProperty[] {TYPE});
     }
     
     @Override

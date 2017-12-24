@@ -4,13 +4,11 @@ import com.flansmod.common.FlansMod;
 import com.flansmod.common.types.InfoType;
 import com.flansmod.common.vector.Vector3f;
 
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public abstract class ItemShootable extends Item 
 {
@@ -25,7 +23,7 @@ public abstract class ItemShootable extends Item
 	}
 	
 	//Can be overriden to allow new types of bullets to be created, for planes
-	public abstract EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public abstract EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, double motionX, double motionY, double motionZ,
 			EntityLivingBase shooter,float gunDamage, InfoType shotFrom);
 
@@ -34,7 +32,7 @@ public abstract class ItemShootable extends Item
 			EntityLivingBase shooter, float spread, float damage, float speed, InfoType shotFrom);
 
 	//Can be overriden to allow new types of bullets to be created, AA/MG constructor
-	public abstract EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public abstract EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, EntityLivingBase shooter, float spread, float damage,
 			InfoType shotFrom);
 

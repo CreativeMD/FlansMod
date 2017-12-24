@@ -3,18 +3,7 @@ package com.flansmod.common.guns;
 import java.util.Collections;
 import java.util.List;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import javax.annotation.Nullable;
 
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.PlayerData;
@@ -23,6 +12,22 @@ import com.flansmod.common.types.IFlanItem;
 import com.flansmod.common.types.InfoType;
 import com.flansmod.common.vector.Vector3f;
 import com.google.common.collect.Multimap;
+
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemGrenade extends ItemShootable implements IFlanItem
 {
@@ -37,10 +42,10 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 	}
 	
 	@Override
-    public Multimap getAttributeModifiers(ItemStack stack)
+	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack)
     {
-        Multimap multimap = super.getAttributeModifiers(stack);
-        multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), new AttributeModifier(itemModifierUUID, "Weapon modifier", type.meleeDamage, 0));
+        Multimap multimap = super.getAttributeModifiers(slot, stack);
+        multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(itemModifierUUID, "Weapon modifier", type.meleeDamage, 0));
         return multimap;
     }
 	
@@ -57,8 +62,12 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 	}
 	
 	@Override
-	public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player)
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn)
 	{
+		if(handIn == EnumHand.OFF_HAND)
+			return super.onItemRightClick(world, player, handIn);
+		
+		ItemStack stack = player.getHeldItemMainhand();
 		PlayerData data = PlayerHandler.getPlayerData(player, world.isRemote ? Side.CLIENT : Side.SERVER);
 		//If can throw grenade
 		if(type.canThrow && data != null && data.shootTimeRight <= 0 && data.shootTimeLeft <= 0)
@@ -69,13 +78,13 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 			EntityGrenade grenade = new EntityGrenade(world, type, player);
 			//Spawn the entity server side
 			if(!world.isRemote)
-				world.spawnEntityInWorld(grenade);
+				world.spawnEntity(grenade);
 			//If this can be remotely detonated, add it to the players detonate list
 			if(type.remote)
 				data.remoteExplosives.add(grenade);
 			//Consume an item
 			if(!player.capabilities.isCreativeMode)
-				stack.stackSize--;
+				stack.shrink(1);
 			//Drop an item upon throwing if necessary
 			if(type.dropItemOnThrow != null)
 			{
@@ -87,10 +96,10 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 					itemName = itemName.split("\\.")[0];
 				}
 				ItemStack dropStack = InfoType.getRecipeElement(itemName, damage);
-				world.spawnEntityInWorld(new EntityItem(world, player.posX, player.posY, player.posZ, dropStack));
+				world.spawnEntity(new EntityItem(world, player.posX, player.posY, player.posZ, dropStack));
 			}
 		}
-		return stack;
+		return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
 	}
 	
 	@Override
@@ -107,7 +116,7 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 	}
 
 	@Override
-	public EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, double motionX, double motionY, double motionZ,
 			EntityLivingBase shooter, float gunDamage,
 			InfoType shotFrom) {
@@ -124,7 +133,7 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 	}
 
 	@Override
-	public EntityShootable getEntity(World worldObj, Vec3 origin, float yaw,
+	public EntityShootable getEntity(World worldObj, Vec3d origin, float yaw,
 			float pitch, EntityLivingBase shooter, float spread, float damage,
 			InfoType shotFrom) {
 		// TODO Auto-generated method stub
@@ -150,11 +159,12 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean b)
+	@SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
 	{
 		if(type.description != null)
 		{
-			Collections.addAll(list, type.description.split("_"));
+			Collections.addAll(tooltip, type.description.split("_"));
 		}
 	}
 	
@@ -168,6 +178,6 @@ public class ItemGrenade extends ItemShootable implements IFlanItem
 			EntityLivingBase shooter)
 	{
 		EntityGrenade grenade = getGrenade(world, shooter);
-		world.spawnEntityInWorld(grenade);
+		world.spawnEntity(grenade);
 	}
 }

@@ -5,8 +5,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import com.flansmod.common.FlansMod;
+import com.flansmod.common.parts.PartType;
+import com.flansmod.common.types.EnumType;
+import com.flansmod.common.types.IPaintableItem;
+import com.flansmod.common.types.InfoType;
+import com.flansmod.common.types.PaintableType;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,23 +24,18 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.flansmod.common.FlansMod;
-import com.flansmod.common.parts.PartType;
-import com.flansmod.common.types.EnumType;
-import com.flansmod.common.types.IFlanItem;
-import com.flansmod.common.types.IPaintableItem;
-import com.flansmod.common.types.InfoType;
-import com.flansmod.common.types.PaintableType;
 
 public class ItemPlane extends Item implements IPaintableItem
 {
@@ -97,34 +102,38 @@ public class ItemPlane extends Item implements IPaintableItem
 
 
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List lines, boolean advancedTooltips)
+	@SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
 	{
-		NBTTagCompound tags = getTagCompound(stack, player.worldObj);
+		NBTTagCompound tags = getTagCompound(stack, worldIn);
 		String engineName = tags.getString("Engine");
 		PartType part = PartType.getPart(engineName);
 		if(part != null)
-			lines.add(part.name);
+			tooltip.add(part.name);
 	}
 	
 	@Override
-    public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer entityplayer)
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn)
     {
+		if(handIn == EnumHand.OFF_HAND)
+			return super.onItemRightClick(world, player, handIn);
+		ItemStack itemstack = player.getHeldItemMainhand();
     	//Raytracing
-        float cosYaw = MathHelper.cos(-entityplayer.rotationYaw * 0.01745329F - 3.141593F);
-        float sinYaw = MathHelper.sin(-entityplayer.rotationYaw * 0.01745329F - 3.141593F);
-        float cosPitch = -MathHelper.cos(-entityplayer.rotationPitch * 0.01745329F);
-        float sinPitch = MathHelper.sin(-entityplayer.rotationPitch * 0.01745329F);
+        float cosYaw = MathHelper.cos(-player.rotationYaw * 0.01745329F - 3.141593F);
+        float sinYaw = MathHelper.sin(-player.rotationYaw * 0.01745329F - 3.141593F);
+        float cosPitch = -MathHelper.cos(-player.rotationPitch * 0.01745329F);
+        float sinPitch = MathHelper.sin(-player.rotationPitch * 0.01745329F);
         double length = 5D;
-        Vec3 posVec = new Vec3(entityplayer.posX, entityplayer.posY + 1.62D - entityplayer.getYOffset(), entityplayer.posZ);        
-        Vec3 lookVec = posVec.addVector(sinYaw * cosPitch * length, sinPitch * length, cosYaw * cosPitch * length);
-        MovingObjectPosition movingobjectposition = world.rayTraceBlocks(posVec, lookVec, type.placeableOnWater);
+        Vec3d posVec = new Vec3d(player.posX, player.posY + 1.62D - player.getYOffset(), player.posZ);        
+        Vec3d lookVec = posVec.addVector(sinYaw * cosPitch * length, sinPitch * length, cosYaw * cosPitch * length);
+        RayTraceResult movingobjectposition = world.rayTraceBlocks(posVec, lookVec, type.placeableOnWater);
         
         //Result check
         if(movingobjectposition == null)
         {
-            return itemstack;
+            return new ActionResult<ItemStack>(EnumActionResult.FAIL, itemstack);
         }
-        if(movingobjectposition.typeOfHit == MovingObjectType.BLOCK)
+        if(movingobjectposition.typeOfHit == RayTraceResult.Type.BLOCK)
         {
         	BlockPos pos = movingobjectposition.getBlockPos();
             Block block = world.getBlockState(pos).getBlock();
@@ -134,15 +143,15 @@ public class ItemPlane extends Item implements IPaintableItem
 	            {
 	            	DriveableData data = getPlaneData(itemstack, world);
 	            	if(data != null)
-	            		world.spawnEntityInWorld(new EntityPlane(world, (double)pos.getX() + 0.5F, (double)pos.getY() + 2.5F, (double)pos.getZ() + 0.5F, entityplayer, type, data));
+	            		world.spawnEntity(new EntityPlane(world, (double)pos.getX() + 0.5F, (double)pos.getY() + 2.5F, (double)pos.getZ() + 0.5F, player, type, data));
 	            }
-				if(!entityplayer.capabilities.isCreativeMode)
+				if(!player.capabilities.isCreativeMode)
 				{	
-					itemstack.stackSize--;
+					itemstack.shrink(1);
 				}
 			}
 		}
-		return itemstack;
+        return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, itemstack);
 	}
 
 	public Entity spawnPlane(World world, double x, double y, double z, ItemStack stack)
@@ -153,7 +162,7 @@ public class ItemPlane extends Item implements IPaintableItem
 			Entity entity = new EntityPlane(world, x, y, z, type, data);
 			if(!world.isRemote)
 			{
-				world.spawnEntityInWorld(entity);
+				world.spawnEntity(entity);
 			}
 			return entity;
 		}
@@ -174,9 +183,9 @@ public class ItemPlane extends Item implements IPaintableItem
     
     /** Make sure that creatively spawned planes have nbt data */
     @Override
-    public void getSubItems(Item item, CreativeTabs tabs, List list)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items)
     {
-    	ItemStack planeStack = new ItemStack(item, 1, 0);
+    	ItemStack planeStack = new ItemStack(this, 1, 0);
     	NBTTagCompound tags = new NBTTagCompound();
     	tags.setString("Type", type.shortName);
     	if(PartType.defaultEngines.containsKey(EnumType.plane))
@@ -187,7 +196,7 @@ public class ItemPlane extends Item implements IPaintableItem
     		tags.setBoolean(part.getShortName() + "_Fire", false);
     	}
     	planeStack.setTagCompound(tags);
-        list.add(planeStack);
+    	items.add(planeStack);
     }
 	
 	@Override

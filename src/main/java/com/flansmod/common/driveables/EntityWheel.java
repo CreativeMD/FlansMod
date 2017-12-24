@@ -1,13 +1,12 @@
 package com.flansmod.common.driveables;
 
-import com.flansmod.common.FlansMod;
 import com.flansmod.common.vector.Vector3f;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.Side;
@@ -59,9 +58,9 @@ public class EntityWheel extends Entity implements IEntityAdditionalSpawnData
     {
 		if(vehicle == null || k <= 0) 
 			return;
-		int i = MathHelper.ceiling_float_int(k - 3F);
+		int i = MathHelper.ceil(k - 3F);
 		if(i > 0)
-			vehicle.attackPart(vehicle.getDriveableType().wheelPositions[ID].part, DamageSource.fall, i);
+			vehicle.attackPart(vehicle.getDriveableType().wheelPositions[ID].part, DamageSource.FALL, i);
 	}
 
 	@Override
@@ -90,11 +89,11 @@ public class EntityWheel extends Entity implements IEntityAdditionalSpawnData
 		//prevPosZ = posZ;
 		
 		//If on the client and the vehicle parent has yet to be found, search for it
-		if(worldObj.isRemote && !foundVehicle)
+		if(world.isRemote && !foundVehicle)
 		{
-			if(!(worldObj.getEntityByID(vehicleID) instanceof EntityDriveable))
+			if(!(world.getEntityByID(vehicleID) instanceof EntityDriveable))
 				return;
-			vehicle = (EntityDriveable)worldObj.getEntityByID(vehicleID);
+			vehicle = (EntityDriveable)world.getEntityByID(vehicleID);
 			foundVehicle = true;
 			vehicle.wheels[ID] = this;
 		}	
@@ -103,7 +102,7 @@ public class EntityWheel extends Entity implements IEntityAdditionalSpawnData
 			return;
 		
 		if(!addedToChunk)
-			worldObj.spawnEntityInWorld(this);
+			world.spawnEntity(this);
 		/*
 		//Update angles
 		rotationYaw = vehicle.rotationYaw;
@@ -162,8 +161,10 @@ public class EntityWheel extends Entity implements IEntityAdditionalSpawnData
 	}
 	
 	@Override
-    public void func_180426_a(double d, double d1, double d2, float f, float f1, int i, boolean b)
+	@SideOnly(Side.CLIENT)
+    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport)
     {
+		
     }
 	
 	@Override
@@ -178,8 +179,8 @@ public class EntityWheel extends Entity implements IEntityAdditionalSpawnData
 	{
 		vehicleID = data.readInt();
 		ID = data.readInt();
-		if(worldObj.getEntityByID(vehicleID) instanceof EntityDriveable)
-			vehicle = (EntityDriveable)worldObj.getEntityByID(vehicleID);
+		if(world.getEntityByID(vehicleID) instanceof EntityDriveable)
+			vehicle = (EntityDriveable)world.getEntityByID(vehicleID);
 		if(vehicle != null)
 			setPosition(posX, posY, posZ);
 	}

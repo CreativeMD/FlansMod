@@ -2,25 +2,6 @@ package com.flansmod.common.driveables;
 
 import java.util.List;
 
-
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemLead;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
 import com.flansmod.api.IControllable;
 import com.flansmod.client.FlansModClient;
 import com.flansmod.common.FlansMod;
@@ -36,6 +17,25 @@ import com.flansmod.common.network.PacketSeatUpdates;
 import com.flansmod.common.teams.TeamsManager;
 import com.flansmod.common.tools.ItemTool;
 import com.flansmod.common.vector.Vector3f;
+
+import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemLead;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntitySeat extends Entity implements IControllable, IEntityAdditionalSpawnData
 {
@@ -110,7 +110,8 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	}
 	
 	@Override
-	public void func_180426_a(double x, double y, double z, float yaw, float pitch, int i, boolean b)
+	@SideOnly(Side.CLIENT)
+    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport)
 	{
 		//setPosition(x, y, z);
 	}
@@ -125,9 +126,9 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 		
 		
 		//If on the client and the driveable parent has yet to be found, search for it
-		if(worldObj.isRemote && !foundDriveable)
+		if(world.isRemote && !foundDriveable)
 		{
-			driveable = (EntityDriveable)worldObj.getEntityByID(driveableID);
+			driveable = (EntityDriveable)world.getEntityByID(driveableID);
 			if(driveable == null)
 				return;
 			foundDriveable = true;
@@ -165,7 +166,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 			pitchSoundDelay = seatInfo.pitchSoundLength;
 		}
 		
-		boolean isThePlayer = riddenByEntity instanceof EntityPlayer && FlansMod.proxy.isThePlayer((EntityPlayer)riddenByEntity);
+		boolean isThePlayer = getControllingPassenger() instanceof EntityPlayer && FlansMod.proxy.isThePlayer((EntityPlayer)getControllingPassenger());
 		
 		//Reset traverse sounds if player exits the vehicle
 		
@@ -178,7 +179,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 		}
 		
 		//If on the client
-		if(worldObj.isRemote)
+		if(world.isRemote)
 		{
 			if(driver && isThePlayer && FlansMod.proxy.mouseControlEnabled() && driveable.hasMouseControlMode())
 			{
@@ -187,8 +188,8 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 			}
 		}
 
-		if(riddenByEntity instanceof EntityPlayer && shooting)
-			pressKey(9, (EntityPlayer)riddenByEntity);
+		if(getControllingPassenger() instanceof EntityPlayer && shooting)
+			pressKey(9, (EntityPlayer)getControllingPassenger());
 		
 		minigunSpeed *= 0.95F;
 		minigunAngle += minigunSpeed;
@@ -199,7 +200,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	public void updatePosition()
 	{
 		//If we haven't found our driveable, give up
-		if(worldObj.isRemote && !foundDriveable)
+		if(world.isRemote && !foundDriveable)
 			return;
 		
 		prevPlayerPosX = playerPosX;
@@ -229,20 +230,20 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 		//Set the absol
 		setPosition(driveable.posX + relativePosition.x, driveable.posY + relativePosition.y, driveable.posZ + relativePosition.z);
 		
-		if(riddenByEntity != null)
+		if(getControllingPassenger() != null)
 		{
 	    	DriveableType type = driveable.getDriveableType();
-			Vec3 yOffset = driveable.axes.findLocalVectorGlobally(new Vector3f(0, riddenByEntity.getEyeHeight() * 3 / 4, 0)).toVec3().subtract(0, riddenByEntity.getEyeHeight(), 0);
+			Vec3d yOffset = driveable.axes.findLocalVectorGlobally(new Vector3f(0, getControllingPassenger().getEyeHeight() * 3 / 4, 0)).toVec3().subtract(0, getControllingPassenger().getEyeHeight(), 0);
 			//driveable.rotate(0, riddenByEntity.getYOffset(), 0).toVec3();
 			
-			playerPosX = posX + yOffset.xCoord;
-			playerPosY = posY + yOffset.yCoord;
-			playerPosZ = posZ + yOffset.zCoord;
+			playerPosX = posX + yOffset.x;
+			playerPosY = posY + yOffset.y;
+			playerPosZ = posZ + yOffset.z;
 			
-			riddenByEntity.lastTickPosX = riddenByEntity.prevPosX = prevPlayerPosX;
-			riddenByEntity.lastTickPosY = riddenByEntity.prevPosY = prevPlayerPosY;
-			riddenByEntity.lastTickPosZ = riddenByEntity.prevPosZ = prevPlayerPosZ;
-			riddenByEntity.setPosition(playerPosX, playerPosY, playerPosZ);
+			getControllingPassenger().lastTickPosX = getControllingPassenger().prevPosX = prevPlayerPosX;
+			getControllingPassenger().lastTickPosY = getControllingPassenger().prevPosY = prevPlayerPosY;
+			getControllingPassenger().lastTickPosZ = getControllingPassenger().prevPosZ = prevPlayerPosZ;
+			getControllingPassenger().setPosition(playerPosX, playerPosY, playerPosZ);
 
 			//Calculate the local look axes globally
 			RotatedAxes globalLookAxes = driveable.axes.findLocalAxesGlobally(playerLooking);
@@ -256,17 +257,17 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 			if(dYaw < -180)
 				prevPlayerYaw -= 360F;
 			
-			if(riddenByEntity instanceof EntityPlayer)
+			if(getControllingPassenger() instanceof EntityPlayer)
 			{
-				riddenByEntity.prevRotationYaw = prevPlayerYaw;
-				riddenByEntity.prevRotationPitch = prevPlayerPitch;
+				getControllingPassenger().prevRotationYaw = prevPlayerYaw;
+				getControllingPassenger().prevRotationPitch = prevPlayerPitch;
 				
-				riddenByEntity.rotationYaw = playerYaw;
-				riddenByEntity.rotationPitch = playerPitch;
+				getControllingPassenger().rotationYaw = playerYaw;
+				getControllingPassenger().rotationPitch = playerPitch;
 			}
 			
 			//If the entity is a player, roll its view accordingly
-			if(worldObj.isRemote)
+			if(world.isRemote)
 			{
 				playerRoll = -globalLookAxes.getRoll();
 			}		
@@ -305,12 +306,6 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	
 	@Override
 	public boolean writeToNBTOptional(NBTTagCompound tags)
-	{
-		return false;
-	}
-	
-	@Override
-	public boolean writeMountToNBT(NBTTagCompound tags)
 	{
 		return false;
 	}
@@ -521,7 +516,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	@Override
 	public void updateKeyHeldState(int key, boolean held)
 	{
-		if(worldObj.isRemote && foundDriveable)
+		if(world.isRemote && foundDriveable)
 		{
 			FlansMod.getPacketHandler().sendToServer(new PacketDriveableKeyHeld(key, held));
 
@@ -540,12 +535,12 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	public boolean pressKey(int key, EntityPlayer player) 
 	{
 		//Driver seat should pass input to driveable
-		if(driver && (!worldObj.isRemote || foundDriveable))
+		if(driver && (!world.isRemote || foundDriveable))
 		{
 			return driveable.pressKey(key, player);
 		}
 		
-		if(worldObj.isRemote)
+		if(world.isRemote)
 		{
 			if(foundDriveable)
 			{
@@ -557,8 +552,8 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 		}
 		
 		//Exit key pressed
-		if(key == 6 && riddenByEntity != null)
-			riddenByEntity.mountEntity(null);
+		if(key == 6 && getControllingPassenger() != null)
+			getControllingPassenger().startRiding(null);
 				
 		if(key == 9) //Shoot
 		{
@@ -587,10 +582,10 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 							//Calculate the origin of the bullets
 							Vector3f yOffset = driveable.axes.findLocalVectorGlobally(new Vector3f(0F, (float)player.getMountedYOffset(), 0F));						
 							//Spawn a new bullet item
-							worldObj.spawnEntityInWorld(((ItemShootable)bulletItemStack.getItem()).getEntity(worldObj, 
+							world.spawnEntity(((ItemShootable)bulletItemStack.getItem()).getEntity(world, 
 									Vector3f.add(yOffset, new Vector3f(gunOrigin.x, gunOrigin.y, gunOrigin.z), null), 
 									shootVec, 
-									(EntityLivingBase)riddenByEntity, 
+									(EntityLivingBase)getControllingPassenger(), 
 									bullet.bulletSpread * gun.bulletSpread, 
 									gun.damage, 
 									gun.bulletSpeed <= 0.0f ? 5.0f : gun.bulletSpeed, // TODO : Fix nasty hack 
@@ -610,7 +605,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 							{
 								//Set the damage to 0 and consume one ammo item (unless in creative)
 								bulletItemStack.setItemDamage(0);
-								if(!((EntityPlayer)riddenByEntity).capabilities.isCreativeMode)
+								if(!((EntityPlayer)getControllingPassenger()).capabilities.isCreativeMode)
 									driveable.getDriveableData().decrStackSize(3 + seatID, 1);
 							}
 							//Reset the shoot delay
@@ -624,43 +619,45 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	}
 	
 	@Override
-	public boolean interactFirst(EntityPlayer entityplayer) //interact : change back when Forge updates
+	public boolean processInitialInteract(EntityPlayer player, EnumHand hand) //interact : change back when Forge updates
 	{
+		if(hand == EnumHand.OFF_HAND)
+			return false;
 		if(isDead)
 			return false;
-		if(worldObj.isRemote)
+		if(world.isRemote)
 			return false;
 		//If they are using a repair tool, don't put them in
-		ItemStack currentItem = entityplayer.getCurrentEquippedItem();
-		if(currentItem != null && currentItem.getItem() instanceof ItemTool && ((ItemTool)currentItem.getItem()).type.healDriveables)
+		ItemStack currentItem = player.getHeldItemMainhand();
+		if(currentItem.getItem() instanceof ItemTool && ((ItemTool)currentItem.getItem()).type.healDriveables)
 			return true;
-		if(currentItem != null && currentItem.getItem() instanceof ItemLead)
+		if(currentItem.getItem() instanceof ItemLead)
 		{
-			if(riddenByEntity != null && riddenByEntity instanceof EntityLiving && !(riddenByEntity instanceof EntityPlayer))
+			if(getControllingPassenger() != null && getControllingPassenger() instanceof EntityLiving && !(getControllingPassenger() instanceof EntityPlayer))
 			{
-				EntityLiving mob = (EntityLiving)riddenByEntity;
-				riddenByEntity.mountEntity(null);
-				mob.setLeashedToEntity(entityplayer, true);
+				EntityLiving mob = (EntityLiving)getControllingPassenger();
+				getControllingPassenger().startRiding(null);
+				mob.setLeashHolder(player, true);
 				return true;
 			}
 			double checkRange = 10;
-			List nearbyMobs = worldObj.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(posX - checkRange, posY - checkRange, posZ - checkRange, posX + checkRange, posY + checkRange, posZ + checkRange));
+			List nearbyMobs = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(posX - checkRange, posY - checkRange, posZ - checkRange, posX + checkRange, posY + checkRange, posZ + checkRange));
 			for(Object obj : nearbyMobs)
 			{
 				EntityLiving entity = (EntityLiving)obj;
-				if(entity.getLeashed() && entity.getLeashedToEntity() == entityplayer)
+				if(entity.getLeashed() && entity.getLeashHolder() == player)
 				{
-					entity.mountEntity(this);
+					entity.startRiding(this);
 					looking.setAngles(-entity.rotationYaw, entity.rotationPitch, 0F);
-					entity.clearLeashed(true, !entityplayer.capabilities.isCreativeMode);
+					entity.clearLeashed(true, !player.capabilities.isCreativeMode);
 				}
 			}
 			return true;
 		}
 		//Put them in the seat
-		if(riddenByEntity == null && !driveable.getDriveableData().engine.isAIChip)
+		if(getControllingPassenger() == null && !driveable.getDriveableData().engine.isAIChip)
 		{
-			entityplayer.mountEntity(this);
+			player.startRiding(this);
 			return true;
 		}
 		return false;
@@ -669,7 +666,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	@Override
 	public Entity getControllingEntity() 
 	{
-		return riddenByEntity;
+		return getControllingPassenger();
 	}
 
 	@Override
@@ -686,27 +683,27 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	
 	
 	@Override
-    public void updateRiderPosition()
+	public void updatePassenger(Entity passenger)
     {
-		if(riddenByEntity instanceof EntityPlayer)
+		if(passenger instanceof EntityPlayer)
 		{
-			riddenByEntity.rotationYaw = playerYaw;
-			riddenByEntity.rotationPitch = playerPitch;
-			riddenByEntity.prevRotationYaw = prevPlayerYaw;
-			riddenByEntity.prevRotationPitch = prevPlayerPitch;
+			passenger.rotationYaw = playerYaw;
+			passenger.rotationPitch = playerPitch;
+			passenger.prevRotationYaw = prevPlayerYaw;
+			passenger.prevRotationPitch = prevPlayerPitch;
 		}
-		riddenByEntity.lastTickPosX = riddenByEntity.prevPosX = prevPlayerPosX;
-		riddenByEntity.lastTickPosY = riddenByEntity.prevPosY = prevPlayerPosY;
-		riddenByEntity.lastTickPosZ = riddenByEntity.prevPosZ = prevPlayerPosZ;
+		passenger.lastTickPosX = passenger.prevPosX = prevPlayerPosX;
+		passenger.lastTickPosY = passenger.prevPosY = prevPlayerPosY;
+		passenger.lastTickPosZ = passenger.prevPosZ = prevPlayerPosZ;
 		
 		//riddenByEntity.setPosition(playerPosX, playerPosY, playerPosZ);
     }
 	
 	@Override
-	public ItemStack getPickedResult(MovingObjectPosition target)
+	public ItemStack getPickedResult(RayTraceResult target)
 	{
-		if(worldObj.isRemote && !foundDriveable)
-			return null;
+		if(world.isRemote && !foundDriveable)
+			return ItemStack.EMPTY;
 		return driveable.getPickedResult(target);
 	}
 	
@@ -730,7 +727,7 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float f) {
-		return !(worldObj.isRemote && !foundDriveable) && driveable.attackEntityFrom(source, f);
+		return !(world.isRemote && !foundDriveable) && driveable.attackEntityFrom(source, f);
 	}
 
 	@Override
@@ -744,8 +741,8 @@ public class EntitySeat extends Entity implements IControllable, IEntityAddition
 	public void readSpawnData(ByteBuf data) 
 	{
 		driveableID = data.readInt();
-		if(worldObj.getEntityByID(driveableID) instanceof EntityDriveable)
-			driveable = (EntityDriveable)worldObj.getEntityByID(driveableID);
+		if(world.getEntityByID(driveableID) instanceof EntityDriveable)
+			driveable = (EntityDriveable)world.getEntityByID(driveableID);
 		seatID = data.readInt();
 		driver = seatID == 0;
 		if(driveable != null)

@@ -20,6 +20,7 @@ import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.text.ITextComponent;
 
 public class TileEntityPaintjobTable extends TileEntity implements IInventory, IUpdatePlayerListBox
 {
@@ -39,7 +40,7 @@ public class TileEntityPaintjobTable extends TileEntity implements IInventory, I
 	public boolean hasCustomName() { return false; }
 
 	@Override
-	public IChatComponent getDisplayName() { return null; }
+	public ITextComponent getDisplayName() { return null; }
 
 	@Override
 	public int getSizeInventory() { return 2; }
@@ -55,7 +56,7 @@ public class TileEntityPaintjobTable extends TileEntity implements IInventory, I
 	{ 
 		if(getStackInSlot(index) != null) 
 		{ 
-			if(count >= getStackInSlot(index).stackSize)
+			if(count >= getStackInSlot(index).getCount())
 			{
 				ItemStack returnStack = getStackInSlot(index);
 				setInventorySlotContents(index, null);
@@ -68,7 +69,7 @@ public class TileEntityPaintjobTable extends TileEntity implements IInventory, I
 				return returnStack;
 			}
 		} 
-		return null; 
+		return ItemStack.EMPTY; 
 	}
 
 	@Override

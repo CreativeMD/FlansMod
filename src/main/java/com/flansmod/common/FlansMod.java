@@ -22,10 +22,12 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -258,8 +260,8 @@ public class FlansMod
 		}
 		if(addGunpowderRecipe)
 		{
-			ItemStack charcoal = new ItemStack(Items.coal, 1, 1);
-			GameRegistry.addShapelessRecipe(new ItemStack(Items.gunpowder), charcoal, charcoal, charcoal, new ItemStack(Items.glowstone_dust));
+			ItemStack charcoal = new ItemStack(Items.COAL, 1, 1);
+			GameRegistry.addShapelessRecipe(new ItemStack(Items.GUNPOWDER), charcoal, charcoal, charcoal, new ItemStack(Items.GLOWSTONE_DUST));
 		}
 		log("Loaded recipes.");
 		
@@ -275,42 +277,42 @@ public class FlansMod
 		}
 		
 		//Register teams mod entities
-		EntityRegistry.registerGlobalEntityID(EntityFlagpole.class, "Flagpole", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityFlagpole.class, "Flagpole", 93, this, 40, 5, true);
-		EntityRegistry.registerGlobalEntityID(EntityFlag.class, "Flag", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityFlag.class, "Flag", 94, this, 40, 5, true);
-		EntityRegistry.registerGlobalEntityID(EntityTeamItem.class, "TeamsItem", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityTeamItem.class, "TeamsItem", 97, this, 100, 10000, true);
-		EntityRegistry.registerGlobalEntityID(EntityGunItem.class, "GunItem", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityGunItem.class, "GunItem", 98, this, 100, 20, true);
-		EntityRegistry.registerGlobalEntityID(EntityItemCustomRender.class, "CustomItem", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityItemCustomRender.class, "CustomItem", 89, this, 100, 20, true);
+		//EntityRegistry.registerGlobalEntityID(EntityFlagpole.class, "Flagpole", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Flagpole"), EntityFlagpole.class, "Flagpole", 93, this, 40, 5, true);
+		//EntityRegistry.registerGlobalEntityID(EntityFlag.class, "Flag", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Flag"), EntityFlag.class, "Flag", 94, this, 40, 5, true);
+		//EntityRegistry.registerGlobalEntityID(EntityTeamItem.class, "TeamsItem", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "TeamsItem"), EntityTeamItem.class, "TeamsItem", 97, this, 100, 10000, true);
+		//EntityRegistry.registerGlobalEntityID(EntityGunItem.class, "GunItem", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "GunItem"), EntityGunItem.class, "GunItem", 98, this, 100, 20, true);
+		//EntityRegistry.registerGlobalEntityID(EntityItemCustomRender.class, "CustomItem", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "CustomItem"), EntityItemCustomRender.class, "CustomItem", 89, this, 100, 20, true);
 		
 		//Register driveables
-		EntityRegistry.registerGlobalEntityID(EntityPlane.class, "Plane", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityPlane.class, "Plane", 90, this, 250, 3, false);
-		EntityRegistry.registerGlobalEntityID(EntityVehicle.class, "Vehicle", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityVehicle.class, "Vehicle", 95, this, 250, 10, false);
-		EntityRegistry.registerGlobalEntityID(EntitySeat.class, "Seat", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntitySeat.class, "Seat", 99, this, 250, 1000, false);
-		EntityRegistry.registerGlobalEntityID(EntityWheel.class, "Wheel", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityWheel.class, "Wheel", 103, this, 250, 20, false);
-		EntityRegistry.registerGlobalEntityID(EntityParachute.class, "Parachute", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityParachute.class, "Parachute", 101, this, 40, 20, false);
-		EntityRegistry.registerGlobalEntityID(EntityMecha.class, "Mecha", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityMecha.class, "Mecha", 102, this, 250, 20, false);
+		//EntityRegistry.registerGlobalEntityID(EntityPlane.class, "Plane", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Plane"), EntityPlane.class, "Plane", 90, this, 250, 3, false);
+		//EntityRegistry.registerGlobalEntityID(EntityVehicle.class, "Vehicle", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Vehicle"), EntityVehicle.class, "Vehicle", 95, this, 250, 10, false);
+		//EntityRegistry.registerGlobalEntityID(EntitySeat.class, "Seat", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Seat"), EntitySeat.class, "Seat", 99, this, 250, 1000, false);
+		//EntityRegistry.registerGlobalEntityID(EntityWheel.class, "Wheel", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Wheel"), EntityWheel.class, "Wheel", 103, this, 250, 20, false);
+		//EntityRegistry.registerGlobalEntityID(EntityParachute.class, "Parachute", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Parachute"), EntityParachute.class, "Parachute", 101, this, 40, 20, false);
+		//EntityRegistry.registerGlobalEntityID(EntityMecha.class, "Mecha", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Mecha"), EntityMecha.class, "Mecha", 102, this, 250, 20, false);
 		
 		//Register bullets and grenades
 		//EntityRegistry.registerGlobalEntityID(EntityBullet.class, "Bullet", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityBullet.class, "Bullet", 96, this, 40, 100, false);
-		EntityRegistry.registerGlobalEntityID(EntityGrenade.class, "Grenade", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityGrenade.class, "Grenade", 100, this, 40, 100, true);
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Bullet"), EntityBullet.class, "Bullet", 96, this, 40, 100, false);
+		//EntityRegistry.registerGlobalEntityID(EntityGrenade.class, "Grenade", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "Grenade"), EntityGrenade.class, "Grenade", 100, this, 40, 100, true);
 
 		//Register MGs and AA guns
-		EntityRegistry.registerGlobalEntityID(EntityMG.class, "MG", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityMG.class, "MG", 91, this, 40, 5, true);
-		EntityRegistry.registerGlobalEntityID(EntityAAGun.class, "AAGun", EntityRegistry.findGlobalUniqueEntityId());
-		EntityRegistry.registerModEntity(EntityAAGun.class, "AAGun", 92, this, 40, 500, false);
+		//EntityRegistry.registerGlobalEntityID(EntityMG.class, "MG", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "MG"), EntityMG.class, "MG", 91, this, 40, 5, true);
+		//EntityRegistry.registerGlobalEntityID(EntityAAGun.class, "AAGun", EntityRegistry.findGlobalUniqueEntityId());
+		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "AAGun"), EntityAAGun.class, "AAGun", 92, this, 40, 500, false);
 		
 		//Register the chunk loader 
 		//TODO : Re-do chunk loading
@@ -336,19 +338,19 @@ public class FlansMod
 	@SubscribeEvent
 	public void playerDrops(PlayerDropsEvent event)
 	{
-		for(int i = event.drops.size() - 1; i >= 0; i--)
+		for(int i = event.getDrops().size() - 1; i >= 0; i--)
 		{
-			EntityItem ent = event.drops.get(i);
-			InfoType type = InfoType.getType(ent.getEntityItem());
+			EntityItem ent = event.getDrops().get(i);
+			InfoType type = InfoType.getType(ent.getItem());
 			if(type != null && !type.canDrop)
-				event.drops.remove(i);
+				event.getDrops().remove(i);
 		}
 	}
 	
 	@SubscribeEvent
 	public void playerDrops(ItemTossEvent event)
 	{
-		InfoType type = InfoType.getType(event.entityItem.getEntityItem());
+		InfoType type = InfoType.getType(event.getEntityItem().getItem());
 		if(type != null && !type.canDrop)
 			event.setCanceled(true);
 	}
@@ -363,7 +365,7 @@ public class FlansMod
 
 	@SubscribeEvent
 	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-		if(eventArgs.modID.equals(MODID))
+		if(eventArgs.getModID().equals(MODID))
 			syncConfig();
 	}
 	
@@ -371,8 +373,8 @@ public class FlansMod
 	public void onBlockBreak(BlockEvent.BreakEvent event)
 	{
 		if(event.getPlayer() != null
-				&& event.getPlayer().getCurrentEquippedItem() != null
-				&& event.getPlayer().getCurrentEquippedItem().getItem() instanceof ItemGun)
+				&& event.getPlayer().getHeldItemMainhand() != null
+				&& event.getPlayer().getHeldItemMainhand().getItem() instanceof ItemGun)
 		{
 			event.setCanceled(true);
 		}
@@ -381,41 +383,41 @@ public class FlansMod
 	@SubscribeEvent
 	public void onLivingSpecialSpawn(EntityJoinWorldEvent event)
 	{
-		double chance = event.world.rand.nextDouble();
+		double chance = event.getWorld().rand.nextDouble();
 
-		if(chance < armourSpawnRate && event.entity instanceof EntityZombie || event.entity instanceof EntitySkeleton)
+		if(chance < armourSpawnRate && event.getEntity() instanceof EntityZombie || event.getEntity() instanceof EntitySkeleton)
 		{
-			if(event.world.rand.nextBoolean() && ArmourType.armours.size() > 0)
+			if(event.getWorld().rand.nextBoolean() && ArmourType.armours.size() > 0)
 			{
 				//Give a completely random piece of armour
-				ArmourType armour = ArmourType.armours.get(event.world.rand.nextInt(ArmourType.armours.size()));
+				ArmourType armour = ArmourType.armours.get(event.getWorld().rand.nextInt(ArmourType.armours.size()));
 				if(armour != null && armour.type != 2)
-					event.entity.setCurrentItemOrArmor(armour.type + 1, new ItemStack(armour.item));
+					event.getEntity().setItemStackToSlot(EntityEquipmentSlot.values()[armour.type + 2], new ItemStack(armour.item));
 			}
 			else if(Team.teams.size() > 0)
 			{
 				//Give a random set of armour
-				Team team = Team.teams.get(event.world.rand.nextInt(Team.teams.size()));
+				Team team = Team.teams.get(event.getWorld().rand.nextInt(Team.teams.size()));
 				if(team.hat != null)
-					event.entity.setCurrentItemOrArmor(1, team.hat.copy());
+					event.getEntity().setItemStackToSlot(EntityEquipmentSlot.HEAD, team.hat.copy());
 				if(team.chest != null)
-					event.entity.setCurrentItemOrArmor(2, team.chest.copy());
+					event.getEntity().setItemStackToSlot(EntityEquipmentSlot.CHEST, team.chest.copy());
 				if(team.legs != null)
-					event.entity.setCurrentItemOrArmor(3, team.legs.copy());
+					event.getEntity().setItemStackToSlot(EntityEquipmentSlot.LEGS, team.legs.copy());
 				if(team.shoes != null)
-					event.entity.setCurrentItemOrArmor(4, team.shoes.copy());
+					event.getEntity().setItemStackToSlot(EntityEquipmentSlot.FEET, team.shoes.copy());
 				
 				if(team.classes.size() > 0)
 				{
-					PlayerClass playerClass = team.classes.get(event.world.rand.nextInt(team.classes.size()));
+					PlayerClass playerClass = team.classes.get(event.getWorld().rand.nextInt(team.classes.size()));
 					if(playerClass.hat != null)
-						event.entity.setCurrentItemOrArmor(1, playerClass.hat.copy());
+						event.getEntity().setItemStackToSlot(EntityEquipmentSlot.HEAD, playerClass.hat.copy());
 					if(playerClass.chest != null)
-						event.entity.setCurrentItemOrArmor(2, playerClass.chest.copy());
+						event.getEntity().setItemStackToSlot(EntityEquipmentSlot.CHEST, playerClass.chest.copy());
 					if(playerClass.legs != null)
-						event.entity.setCurrentItemOrArmor(3, playerClass.legs.copy());
+						event.getEntity().setItemStackToSlot(EntityEquipmentSlot.LEGS, playerClass.legs.copy());
 					if(playerClass.shoes != null)
-						event.entity.setCurrentItemOrArmor(4, playerClass.shoes.copy());
+						event.getEntity().setItemStackToSlot(EntityEquipmentSlot.FEET, playerClass.shoes.copy());
 				}
 			}
 		}
@@ -426,7 +428,7 @@ public class FlansMod
 	@SubscribeEvent
 	public void onAttackEntity(AttackEntityEvent event)
 	{
-		if(event.entity instanceof EntityGunItem)
+		if(event.getEntity() instanceof EntityGunItem)
 		{
 			event.setCanceled(true);
 		}

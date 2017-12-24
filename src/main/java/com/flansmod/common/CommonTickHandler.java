@@ -6,6 +6,9 @@ import java.util.LinkedList;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -57,7 +60,7 @@ public class CommonTickHandler
 			while(replacementItemEntities.size() > 0)
 			{
 				EntityItemCustomRender entity = replacementItemEntities.remove();
-				entity.worldObj.spawnEntityInWorld(entity);
+				entity.world.spawnEntity(entity);
 			}
 
 			break;
@@ -79,13 +82,13 @@ public class CommonTickHandler
 	public void onEntitySpawn(EntityJoinWorldEvent event) 
 	{
 		//Replace gun items with custom render gun items
-		if(event.entity instanceof EntityItem && !(event.entity instanceof EntityItemCustomRender))
+		if(event.getEntity() instanceof EntityItem && !(event.getEntity() instanceof EntityItemCustomRender))
 		{
-			ItemStack stack = getEntityItem((EntityItem)event.entity);
+			ItemStack stack = getEntityItem((EntityItem)event.getEntity());
 			if(stack != null && stack.getItem() instanceof ItemGun && ((ItemGun)stack.getItem()).GetType().modelString != null)
 			{
 				//event.world.spawnEntityInWorld(new EntityItemCustomRender((EntityItem)event.entity));
-				replacementItemEntities.add(new EntityItemCustomRender((EntityItem)event.entity));
+				replacementItemEntities.add(new EntityItemCustomRender((EntityItem)event.getEntity()));
 				event.setCanceled(true);
 			}
 		}			
@@ -93,6 +96,6 @@ public class CommonTickHandler
 	
     public ItemStack getEntityItem(EntityItem entity)
     {
-        return entity.getDataWatcher().getWatchableObjectItemStack(10);
+        return entity.getItem();
     }
 }

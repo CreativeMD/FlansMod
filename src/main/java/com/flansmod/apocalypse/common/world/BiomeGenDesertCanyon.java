@@ -17,6 +17,7 @@ public class BiomeGenDesertCanyon extends BiomeGenApocalypse
 	public BiomeGenDesertCanyon(int i, boolean register) 
 	{
 		super(i, register);
+		
 		minHeight = 0.1F;
 		maxHeight = 0.6F;
 		spawnableMonsterList.clear();

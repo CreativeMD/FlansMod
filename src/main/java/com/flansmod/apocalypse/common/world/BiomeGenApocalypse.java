@@ -2,28 +2,27 @@ package com.flansmod.apocalypse.common.world;
 
 import java.util.Random;
 
-import net.minecraft.block.BlockSand;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraftforge.common.BiomeManager;
 import net.minecraftforge.common.BiomeManager.BiomeEntry;
 import net.minecraftforge.common.BiomeManager.BiomeType;
 
-public class BiomeGenApocalypse extends BiomeGenBase
+public class BiomeGenApocalypse extends Biome
 {
-	protected static final BiomeGenBase.Height height_DeepCanyon = new BiomeGenBase.Height(-1.8F, 0F);
-	protected static final BiomeGenBase.Height height_Canyon = new BiomeGenBase.Height(-1F, 0F);
-	protected static final BiomeGenBase.Height height_Ground = new BiomeGenBase.Height(0F, 0F);
-	protected static final BiomeGenBase.Height height_Plateau = new BiomeGenBase.Height(1F, 0F);
-	protected static final BiomeGenBase.Height height_HighPlateau = new BiomeGenBase.Height(2.5F, 0.F);
+	protected static final Biome.Height height_DeepCanyon = new Biome.Height(-1.8F, 0F);
+	protected static final Biome.Height height_Canyon = new Biome.Height(-1F, 0F);
+	protected static final Biome.Height height_Ground = new Biome.Height(0F, 0F);
+	protected static final Biome.Height height_Plateau = new Biome.Height(1F, 0F);
+	protected static final Biome.Height height_HighPlateau = new Biome.Height(2.5F, 0.F);
 	
-	public static BiomeGenBase deepCanyon, canyon, desert, plateau, highPlateau;
-	public static BiomeGenBase sulphurPits;
+	public static Biome deepCanyon, canyon, desert, plateau, highPlateau;
+	public static Biome sulphurPits;
 
 	public static void registerBiomes()
 	{
@@ -38,11 +37,11 @@ public class BiomeGenApocalypse extends BiomeGenBase
 		addBiomes(deepCanyon, canyon, desert, plateau, highPlateau, sulphurPits);
 	}
 	
-	private static void addBiomes(BiomeGenBase... biomes)
+	private static void addBiomes(Biome... biomes)
 	{
-		for(BiomeGenBase biome : biomes)	
+		for(Biome biome : biomes)	
 		{
-			BiomeManager.addBiome(BiomeType.DESERT, new BiomeEntry(biome, biome.biomeID));
+			BiomeManager.addBiome(BiomeType.DESERT, new BiomeEntry(biome, biome.getID));
 			BiomeManager.removeSpawnBiome(biome);
 		}
 	}
@@ -50,7 +49,7 @@ public class BiomeGenApocalypse extends BiomeGenBase
 	public BiomeGenApocalypse(int i, boolean register) 
 	{
 		super(i, register);
-		this.theBiomeDecorator = new BiomeDecoratorApocalypse();
+		this.decorator = new BiomeDecoratorApocalypse();
 	}
 	
 	@Override
@@ -73,24 +72,24 @@ public class BiomeGenApocalypse extends BiomeGenBase
         {
             if (k1 <= rand.nextInt(5))
             {
-                primer.setBlockState(j1, k1, i1, Blocks.bedrock.getDefaultState());
+                primer.setBlockState(j1, k1, i1, Blocks.BEDROCK.getDefaultState());
             }
             else
             {
                 IBlockState iblockstate2 = primer.getBlockState(j1, k1, i1);
 
-                if (iblockstate2.getBlock().getMaterial() == Material.air)
+                if (iblockstate2.getMaterial() == Material.AIR)
                 {
                     k = -1;
                 }
-                else if (iblockstate2.getBlock() == Blocks.stone)
+                else if (iblockstate2.getBlock() == Blocks.STONE)
                 {
                     if (k == -1)
                     {
                         if (l <= 0)
                         {
                             iblockstate = null;
-                            iblockstate1 = Blocks.stone.getDefaultState();
+                            iblockstate1 = Blocks.STONE.getDefaultState();
                         }
                         else if (k1 >= 59 && k1 <= 64)
                         {

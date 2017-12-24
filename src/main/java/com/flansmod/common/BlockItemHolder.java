@@ -1,19 +1,11 @@
 package com.flansmod.common;
 
-import com.flansmod.client.FlansModClient;
-import com.flansmod.common.teams.ItemOpStick;
-import com.flansmod.common.teams.Team;
-import com.flansmod.common.teams.TileEntitySpawner;
-
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockState;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
@@ -22,20 +14,15 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.Packet;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockItemHolder extends BlockContainer
 {
@@ -44,7 +31,7 @@ public class BlockItemHolder extends BlockContainer
 	
 	public BlockItemHolder(ItemHolderType type) 
 	{
-		super(Material.rock);
+		super(Material.ROCK);
 		this.type = type;
 		setCreativeTab(FlansMod.tabFlanParts);
 		setHardness(2F);
@@ -58,7 +45,7 @@ public class BlockItemHolder extends BlockContainer
 	}
 
 	@Override
-	public AxisAlignedBB getCollisionBoundingBox(World par1World, BlockPos pos, IBlockState state)
+	public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
 	{
 	    return null;
 	}
@@ -69,10 +56,10 @@ public class BlockItemHolder extends BlockContainer
 	}
 		
 	@Override
-	public boolean isOpaqueCube()
-	{
-	    return false;
-	}
+	public boolean isOpaqueCube(IBlockState state)
+    {
+        return false;
+    }
 	
 	@Override
     public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack)
@@ -82,7 +69,7 @@ public class BlockItemHolder extends BlockContainer
     }
 	
 	@Override
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)
+	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand)
     {
         if (!facing.getAxis().isHorizontal())
         {
@@ -104,24 +91,19 @@ public class BlockItemHolder extends BlockContainer
         return i;
     }
 
-    protected BlockState createBlockState()
+    protected BlockStateContainer createBlockState()
     {
-        return new BlockState(this, new IProperty[] {FACING});
+        return new BlockStateContainer(this, new IProperty[] {FACING});
     }
 
     
 	@Override
 	public boolean canPlaceBlockAt(World par1World, BlockPos pos)
 	{
-	    return par1World.doesBlockHaveSolidTopSurface(par1World, pos.add(0, -1, 0));
+	    return par1World.isSideSolid(pos.add(0, -1, 0), EnumFacing.UP);
 	}
-	
-	@Override
-    public void onEntityCollidedWithBlock(World par1World, BlockPos pos, Entity par5Entity)
-    {
-    }
     
-    @Override
+    /*@Override
     public void setBlockBoundsBasedOnState(IBlockAccess access, BlockPos pos)
     {
     	setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 0.5F, 1.0F);
@@ -140,7 +122,7 @@ public class BlockItemHolder extends BlockContainer
 	public int getMobilityFlag()
 	{
 		return 1;
-	}
+	}*/
 
 	@Override
 	public TileEntity createNewTileEntity(World var1, int i)
@@ -149,7 +131,7 @@ public class BlockItemHolder extends BlockContainer
 	}
 		
     @Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float par7, float par8, float par9)
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
     	if(world.isRemote)
     	{
@@ -158,21 +140,21 @@ public class BlockItemHolder extends BlockContainer
     	}
 
     	TileEntityItemHolder holder = (TileEntityItemHolder)world.getTileEntity(pos);
-    	ItemStack item = player.getCurrentEquippedItem();
+    	ItemStack item = player.getHeldItemMainhand();
     	
-    	if(holder.getStackInSlot(0) == null)
+    	if(!holder.getStackInSlot(0).isEmpty())
     	{
     		holder.setInventorySlotContents(0, item);
     		player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
     	}
     	else
     	{
-    		world.spawnEntityInWorld(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), holder.getStackInSlot(0)));
+    		world.spawnEntity(new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), holder.getStackInSlot(0)));
     		holder.setInventorySlotContents(0, null);
     		FlansMod.playerHandler.getPlayerData(player, Side.SERVER).shootTimeLeft = FlansMod.playerHandler.getPlayerData(player, Side.SERVER).shootTimeRight = 10;
     	}
     	
-    	world.markBlockForUpdate(pos);
+    	//world.markUpdate(pos);
 
         return true;
     }

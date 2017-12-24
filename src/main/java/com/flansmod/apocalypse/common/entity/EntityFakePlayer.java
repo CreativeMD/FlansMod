@@ -2,13 +2,10 @@ package com.flansmod.apocalypse.common.entity;
 
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class EntityFakePlayer extends EntityFlansModShooter
@@ -30,19 +27,19 @@ public class EntityFakePlayer extends EntityFlansModShooter
 		inventory = new InventoryBasic("FakePlayer", true, player.inventory.getSizeInventory());
 		for(int i = 0; i < player.inventory.getSizeInventory(); i++)
 		{
-			inventory.setInventorySlotContents(i, ItemStack.copyItemStack(player.inventory.getStackInSlot(i)));
+			inventory.setInventorySlotContents(i, player.inventory.getStackInSlot(i).copy());
 		}
 	}
 
 	@Override
     protected void dropFewItems(boolean b, int i)
 	{
-		if(!worldObj.isRemote)
+		if(!world.isRemote)
 		{
 			for(int j = 0; j < inventory.getSizeInventory(); j++)
 			{
-				if(inventory.getStackInSlot(j) != null)
-					worldObj.spawnEntityInWorld(new EntityItem(worldObj, posX, posY, posZ, inventory.getStackInSlot(j)));
+				if(!inventory.getStackInSlot(j).isEmpty())
+					world.spawnEntity(new EntityItem(world, posX, posY, posZ, inventory.getStackInSlot(j)));
 			}
 		}
 	}
@@ -54,7 +51,7 @@ public class EntityFakePlayer extends EntityFlansModShooter
 		inventory = new InventoryBasic("FakePlayer", true, 40);
 		for(int i = 0; i < 40; i++)
 		{
-			inventory.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(tags.getCompoundTag("S" + i)));
+			inventory.setInventorySlotContents(i, new ItemStack(tags.getCompoundTag("S" + i)));
 		}	
 	}
 
@@ -65,7 +62,7 @@ public class EntityFakePlayer extends EntityFlansModShooter
 		for(int i = 0; i < 40; i++)
 		{
 			NBTTagCompound itemtags = new NBTTagCompound();
-			if(inventory.getStackInSlot(i) != null)
+			if(!inventory.getStackInSlot(i).isEmpty())
 				inventory.getStackInSlot(i).writeToNBT(itemtags);
 			tags.setTag("S" + i, itemtags);
 		}

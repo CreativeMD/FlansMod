@@ -29,7 +29,7 @@ public class CommonGuiHandler implements IGuiHandler
  	@SideOnly(Side.CLIENT)
  	public static void openGunBoxGui(EntityPlayer player, GunBoxType type) 
  	{
- 		EntityPlayerMP playerMP = FMLClientHandler.instance().getServer().getConfigurationManager().getPlayerByUsername(player.getName());
+ 		EntityPlayerMP playerMP = FMLClientHandler.instance().getServer().getPlayerList().getPlayerByUsername(player.getName());
  		FMLClientHandler.instance().displayGuiScreen(player, new GuiGunBox(playerMP.inventory, type));
  	}
 }

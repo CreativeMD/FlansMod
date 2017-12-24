@@ -21,7 +21,7 @@ public class ApocalypseModelManager
 	@SubscribeEvent
 	public void onModelBakeEvent(ModelBakeEvent event)
 	{
-		event.modelRegistry.putObject(new ModelResourceLocation("flansmodapocalypse:blockSulphuricAcid", "normal"), new FluidBlockModel());
+		event.getModelRegistry().putObject(new net.minecraft.client.renderer.block.model.ModelResourceLocation("flansmodapocalypse:blockSulphuricAcid", "normal"), new FluidBlockModel());
 		
 		TextureMap textureMap = Minecraft.getMinecraft().getTextureMapBlocks();
 		FlansModApocalypse.sulphuricAcid.setIcons(textureMap.getAtlasSprite("flansmodapocalypse:blocks/SulphuricAcidStill"), textureMap.getAtlasSprite("flansmodapocalypse:blocks/SulphuricAcidFlowing"));

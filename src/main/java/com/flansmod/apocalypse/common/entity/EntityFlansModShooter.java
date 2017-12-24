@@ -1,57 +1,37 @@
 package com.flansmod.apocalypse.common.entity;
 
-import java.util.Calendar;
-
 import com.flansmod.common.FlansMod;
-import com.flansmod.common.PlayerHandler;
 import com.flansmod.common.guns.AttachmentType;
-import com.flansmod.common.guns.EnumFireMode;
 import com.flansmod.common.guns.GunType;
-import com.flansmod.common.guns.InventoryHelper;
 import com.flansmod.common.guns.ItemGun;
 import com.flansmod.common.guns.ItemShootable;
 import com.flansmod.common.guns.ShootableType;
 import com.flansmod.common.network.PacketPlaySound;
-import com.flansmod.common.network.PacketReload;
 import com.flansmod.common.vector.Vector3f;
-import com.google.common.base.Predicate;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIArrowAttack;
-import net.minecraft.entity.ai.EntityAIAvoidEntity;
-import net.minecraft.entity.ai.EntityAIFleeSun;
+import net.minecraft.entity.ai.EntityAIAttackRanged;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
-import net.minecraft.entity.ai.EntityAIRestrictSun;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.projectile.EntityArrow;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumDifficulty;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldProviderHell;
 
 public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 {
-	private EntityAIArrowAttack aiArrowAttack = new EntityAIArrowAttack(this, 1.0D, 20, 1, 70.0F);
+	private EntityAIAttackRanged aiArrowAttack = new EntityAIAttackRanged(this, 1.0D, 20, 1, 70.0F);
 	public ItemStack[] ammoStacks;
 	public float shootDelay = 0;
 	public float minigunSpeed = 0.0F;
@@ -77,7 +57,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
         	tasks.addTask(4, this.aiArrowAttack);
         }
         
-        renderDistanceWeight = 200D;
+        setRenderDistanceWeight(200D);
 	}
 	
 	@Override
@@ -92,18 +72,24 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
     protected void applyEntityAttributes()
     {
         super.applyEntityAttributes();
-        this.getEntityAttribute( SharedMonsterAttributes.followRange).setBaseValue(80D);
-        this.getEntityAttribute(SharedMonsterAttributes.movementSpeed).setBaseValue(0.25D);
+        this.getEntityAttribute( SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(80D);
+        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.25D);
     }
 	
 	@Override
-	public IEntityLivingData func_180482_a(DifficultyInstance difficulty, IEntityLivingData data)
+	public void setSwingingArms(boolean swingingArms) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, IEntityLivingData data)
     {
-        data = super.func_180482_a(difficulty, data);
+        data = super.onInitialSpawn(difficulty, data);
 
         this.tasks.addTask(4, this.aiArrowAttack);
-        this.func_180481_a(difficulty);
-        this.func_180483_b(difficulty);
+        this.setEquipmentBasedOnDifficulty(difficulty);
+        this.setEnchantmentBasedOnDifficulty(difficulty);
 
         this.setCanPickUpLoot(this.rand.nextFloat() < 0.55F * difficulty.getClampedAdditionalDifficulty());
 
@@ -113,7 +99,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 	@Override
 	public void attackEntityWithRangedAttack(EntityLivingBase entity, float range)
     {			
-		ItemStack stack = getHeldItem();
+		ItemStack stack = getHeldItemMainhand();
 		if(stack != null && stack.getItem() instanceof ItemGun)
 		{
 			ItemGun item = (ItemGun)stack.getItem();
@@ -158,7 +144,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 				//If no bullet stack was found, reload
 				if(bulletStack == null)
 				{
-					if(reload(stack, type, worldObj, this, false, false))
+					if(reload(stack, type, world, this, false, false))
 					{
 						//Set player shoot delay to be the reload delay
 						//Set both gun delays to avoid reloading two guns at once
@@ -175,7 +161,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 				else if(bulletStack.getItem() instanceof ItemShootable)
 				{
 					//Shoot
-					shoot(stack, type, worldObj, bulletStack, this, false, entity);
+					shoot(stack, type, world, bulletStack, this, false, entity);
 					//Damage the bullet item
 					damage = bulletStack.getItemDamage() + 1;
 					bulletStack.setItemDamage(damage);
@@ -220,7 +206,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 			ItemStack bulletStack = item.getBulletItemStack(gunStack, i);
 			
 			//If there is no magazine, if the magazine is empty or if this is a forced reload
-			if(bulletStack == null || bulletStack.getItemDamage() == bulletStack.getMaxDamage() || forceReload)
+			if(bulletStack.isEmpty() || bulletStack.getItemDamage() == bulletStack.getMaxDamage() || forceReload)
 			{		
 				//Iterate over all inventory slots and find the magazine / bullet item with the most bullets
 				int bestSlot = -1;
@@ -228,7 +214,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 				for (int j = 0; j < ammoStacks.length; j++)
 				{
 					ItemStack searchingStack = ammoStacks[j];
-					if (searchingStack != null && searchingStack.getItem() instanceof ItemShootable && gunType.isAmmo(((ItemShootable)(searchingStack.getItem())).type))
+					if (!searchingStack.isEmpty() && searchingStack.getItem() instanceof ItemShootable && gunType.isAmmo(((ItemShootable)(searchingStack.getItem())).type))
 					{
 						int bulletsInThisSlot = searchingStack.getMaxDamage() - searchingStack.getItemDamage();
 						if(bulletsInThisSlot > bulletsInBestSlot)
@@ -244,19 +230,17 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 					ItemStack newBulletStack = ammoStacks[bestSlot];
 					ShootableType newBulletType = ((ItemShootable)newBulletStack.getItem()).type;
 					//Unload the old magazine (Drop an item if it is required and the player is not in creative mode)
-					if(bulletStack != null && bulletStack.getItem() instanceof ItemShootable && ((ItemShootable)bulletStack.getItem()).type.dropItemOnReload != null && !creative)
+					if(!bulletStack.isEmpty() && bulletStack.getItem() instanceof ItemShootable && ((ItemShootable)bulletStack.getItem()).type.dropItemOnReload != null && !creative)
 						item.dropItem(world, this, ((ItemShootable)bulletStack.getItem()).type.dropItemOnReload);
 					
 					//Load the new magazine
 					ItemStack stackToLoad = newBulletStack.copy();
-					stackToLoad.stackSize = 1;
+					stackToLoad.setCount(1);
 					item.setBulletItemStack(gunStack, stackToLoad, i);					
 					
 					//Remove the magazine from the inventory
 					if(!creative)
-						newBulletStack.stackSize--;
-					if(newBulletStack.stackSize <= 0)
-						newBulletStack = null;
+						newBulletStack.shrink(0);
 					ammoStacks[bestSlot] = newBulletStack;
 								
 					
@@ -293,7 +277,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 				Vector3f direction = new Vector3f(target.posX - posX, (target.posY + target.getEyeHeight()) - (posY + getEyeHeight()), target.posZ - posZ).normalise(null);
 				Vector3f.add(direction, new Vector3f(rand.nextFloat() * direction.x * inaccuracy, rand.nextFloat() * direction.y * inaccuracy, rand.nextFloat() * direction.z * inaccuracy), direction);
 				ItemShootable shootableItem = (ItemShootable)bulletStack.getItem();
-				shootableItem.Shoot(worldObj,
+				shootableItem.Shoot(world,
 						origin,
 						direction,
 						gunType.getDamage(stack),
@@ -303,10 +287,10 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 						this);
 			}
 			// Drop item on shooting if bullet requires it
-			if(bullet.dropItemOnShoot != null)
+			if(!bullet.dropItemOnShoot.isEmpty())
 				item.dropItem(world, this, bullet.dropItemOnShoot);
 			// Drop item on shooting if gun requires it
-			if(gunType.dropItemOnShoot != null)
+			if(!gunType.dropItemOnShoot.isEmpty())
 				item.dropItem(world, this, gunType.dropItemOnShoot);
 		}
 		shootDelay = gunType.GetShootDelay(stack);
@@ -327,6 +311,7 @@ public class EntityFlansModShooter extends EntityMob implements IRangedAttackMob
 	@Override
     public boolean getCanSpawnHere()
     {
-        return this.worldObj.getDifficulty() != EnumDifficulty.PEACEFUL;
+        return this.world.getDifficulty() != EnumDifficulty.PEACEFUL;
     }
+	
 }

@@ -2,15 +2,16 @@ package com.flansmod.common.driveables.mechas;
 
 import java.util.HashMap;
 
+import com.flansmod.common.guns.ItemBullet;
+import com.flansmod.common.guns.ItemGun;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.IChatComponent;
-
-import com.flansmod.common.guns.ItemBullet;
-import com.flansmod.common.guns.ItemGun;
+import net.minecraft.util.text.TextComponentString;
 
 public class MechaInventory implements IInventory 
 {
@@ -39,7 +40,7 @@ public class MechaInventory implements IInventory
 			return;
 		for(EnumMechaSlotType type : EnumMechaSlotType.values())
 		{
-			stacks.put(type, ItemStack.loadItemStackFromNBT(tags.getCompoundTag(type.toString())));
+			stacks.put(type, new ItemStack(tags.getCompoundTag(type.toString())));
 		}
 	}
 	
@@ -80,22 +81,14 @@ public class MechaInventory implements IInventory
 		if(slot == null)
 			return null;
 		
-		int numToTake = Math.min(j, slot.stackSize);		
+		int numToTake = Math.min(j, slot.getCount());		
 		ItemStack returnStack = slot.copy();
-		returnStack.stackSize = numToTake;
-		slot.stackSize -= numToTake;
-		if(slot.stackSize <= 0)
-			slot = null;
+		returnStack.setCount(numToTake);
+		slot.shrink(numToTake);
 		
 		setInventorySlotContents(i, slot);
 		
 		return returnStack;
-	}
-
-	@Override
-	public ItemStack getStackInSlotOnClosing(int i) 
-	{
-		return getStackInSlot(i);
 	}
 
 	@Override
@@ -121,12 +114,6 @@ public class MechaInventory implements IInventory
 	{
 		if(mecha != null)
 			mecha.couldNotFindFuel = false;
-	}
-
-	@Override
-	public boolean isUseableByPlayer(EntityPlayer entityplayer) 
-	{
-		return mecha != null && entityplayer.getDistanceToEntity(mecha) <= 10D;
 	}
 
 	@Override
@@ -156,7 +143,7 @@ public class MechaInventory implements IInventory
 	}
 
 	@Override
-	public IChatComponent getDisplayName() 
+	public TextComponentString getDisplayName() 
 	{
 		return null;
 	}
@@ -195,5 +182,35 @@ public class MechaInventory implements IInventory
 	public void clear() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean isEmpty() {
+		for(int i = 0; i < getSizeInventory(); i++)
+		{
+			if(!getStackInSlot(i).isEmpty())
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	public ItemStack removeStackFromSlot(int index) {
+		ItemStack itemstack = getStackInSlot(index);
+
+        if (itemstack.isEmpty())
+        {
+            return ItemStack.EMPTY;
+        }
+        else
+        {
+            setInventorySlotContents(index, ItemStack.EMPTY);
+            return itemstack;
+        }
+	}
+
+	@Override
+	public boolean isUsableByPlayer(EntityPlayer player) {
+		return mecha != null && player.getDistance(mecha) <= 10D;
 	}
 }

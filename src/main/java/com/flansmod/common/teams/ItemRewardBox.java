@@ -2,13 +2,19 @@ package com.flansmod.common.teams;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.flansmod.common.FlansMod;
 import com.flansmod.common.parts.EnumPartCategory;
 
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 // Does nothing. Just here for rendering purposes
 public class ItemRewardBox extends Item 
@@ -25,8 +31,9 @@ public class ItemRewardBox extends Item
 	}
 	
 	@Override
-	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4)
+	@SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
 	{
-		par3List.add("Useless item. Never used outside of rank-based PVP");
+		tooltip.add("Useless item. Never used outside of rank-based PVP");
 	}
 }

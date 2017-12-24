@@ -1,10 +1,12 @@
 package com.flansmod.client;
 
-import net.minecraft.client.audio.MovingSound;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.ResourceLocation;
-
 import com.flansmod.common.driveables.EntityDriveable;
+
+import net.minecraft.client.audio.MovingSound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.MathHelper;
 
 //TODO : Implement this!
 public class MovingSoundDriveable extends MovingSound 
@@ -12,9 +14,9 @@ public class MovingSoundDriveable extends MovingSound
 	private final EntityDriveable driveable;
 	private float field_147669_l = 0.0F;
 	
-	public MovingSoundDriveable(ResourceLocation sound, EntityDriveable driveable)
+	public MovingSoundDriveable(SoundEvent sound, EntityDriveable driveable)
 	{
-	    super(sound);
+	    super(sound, SoundCategory.PLAYERS);
 	    this.driveable = driveable;
 	    repeat = true;
 	    repeatDelay = 0;
@@ -34,12 +36,12 @@ public class MovingSoundDriveable extends MovingSound
 			xPosF = (float)driveable.posX;
 			yPosF = (float)driveable.posY;
 			zPosF = (float)driveable.posZ;
-			float f = MathHelper.sqrt_double(driveable.motionX * driveable.motionX + driveable.motionZ * driveable.motionZ);
+			float f = MathHelper.sqrt(driveable.motionX * driveable.motionX + driveable.motionZ * driveable.motionZ);
 	
 			if ((double)f >= 0.01D)
 			{
-				field_147669_l = MathHelper.clamp_float(field_147669_l + 0.0025F, 0.0F, 1.0F);
-				volume = 0.0F + MathHelper.clamp_float(f, 0.0F, 0.5F) * 0.7F;
+				field_147669_l = MathHelper.clamp(field_147669_l + 0.0025F, 0.0F, 1.0F);
+				volume = 0.0F + MathHelper.clamp(f, 0.0F, 0.5F) * 0.7F;
 			}
 			else
 			{

@@ -66,7 +66,7 @@ public class PlayerHitbox
 					Vector3f point = new Vector3f(o.x + d.x * i / 2, o.y + d.y * j / 2, o.z + d.z * k / 2);
 					point = axes.findLocalVectorGlobally(point);
 					if(FlansMod.DEBUG && world.isRemote)
-						world.spawnEntityInWorld(new EntityDebugDot(world, new Vector3f(pos.x + rP.x + point.x, pos.y + rP.y + point.y, pos.z + rP.z + point.z), 1, 0F, 1F, 0F));
+						world.spawnEntity(new EntityDebugDot(world, new Vector3f(pos.x + rP.x + point.x, pos.y + rP.y + point.y, pos.z + rP.z + point.z), 1, 0F, 1F, 0F));
 				}
 		
 	}
@@ -173,11 +173,11 @@ public class PlayerHitbox
 			//Calculate the hit damage
 			float hitDamage = damage * bulletType.damageVsLiving * damageModifier;
 			//Create a damage source object
-			DamageSource damagesource = damageOwner == null ? DamageSource.generic 
+			DamageSource damagesource = damageOwner == null ? DamageSource.GENERIC 
 					: EntityBullet.GetBulletDamage(firedFrom, bulletType, damageOwner, type == EnumHitboxType.HEAD);
 
 			//When the damage is 0 (such as with Nerf guns) the entityHurt Forge hook is not called, so this hacky thing is here
-			if(!player.worldObj.isRemote && hitDamage == 0 && TeamsManager.getInstance().currentRound != null)
+			if(!player.world.isRemote && hitDamage == 0 && TeamsManager.getInstance().currentRound != null)
 				TeamsManager.getInstance().currentRound.gametype.playerAttacked((EntityPlayerMP)player, damagesource);
 			
 			//Attack the entity!
@@ -193,8 +193,8 @@ public class PlayerHitbox
 		}
 		case RIGHTITEM :
 		{
-			ItemStack currentStack = player.getCurrentEquippedItem();
-			if(currentStack != null && currentStack.getItem() instanceof ItemGun)
+			ItemStack currentStack = player.getHeldItemMainhand();
+			if(currentStack.getItem() instanceof ItemGun)
 			{
 				GunType gunType = ((ItemGun)currentStack.getItem()).GetType();
 				//TODO : Shield damage
@@ -208,11 +208,11 @@ public class PlayerHitbox
 			if(data.offHandGunSlot != 0)
 			{
 				ItemStack leftHandStack = null;
-				if(player.worldObj.isRemote && !FlansMod.proxy.isThePlayer(player))
+				if(player.world.isRemote && !FlansMod.proxy.isThePlayer(player))
 					leftHandStack = data.offHandGunStack;
 				else leftHandStack = player.inventory.getStackInSlot(data.offHandGunSlot - 1);
 				
-				if(leftHandStack != null && leftHandStack.getItem() instanceof ItemGun)
+				if(leftHandStack.getItem() instanceof ItemGun)
 				{
 					GunType leftGunType = ((ItemGun)leftHandStack.getItem()).GetType();
 					//TODO : Shield damage

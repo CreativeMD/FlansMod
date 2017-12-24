@@ -14,7 +14,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
-public class RenderPowerCube extends TileEntitySpecialRenderer 
+public class RenderPowerCube extends TileEntitySpecialRenderer<TileEntityPowerCube>
 {
 	private ResourceLocation TEXTURE = new ResourceLocation("flansmodapocalypse", "textures/blocks/PowerCube.png");
 	private ModelPowerCube model;
@@ -24,10 +24,9 @@ public class RenderPowerCube extends TileEntitySpecialRenderer
 		model = new ModelPowerCube();
 	}
 	
-	@Override
-	public void renderTileEntityAt(TileEntity te, double posX, double posY, double posZ, float p_180535_8_, int p_180535_9_) 
-	{
-		TileEntityPowerCube holder = (TileEntityPowerCube)te;
+	public void render(TileEntityPowerCube holder, double posX, double posY, double posZ, float partialTicks, int destroyStage, float alpha)
+    {
+		super.render(holder, posX, posY, posZ, partialTicks, destroyStage, alpha);
 		
 		if(model != null)
 		{
@@ -59,7 +58,7 @@ public class RenderPowerCube extends TileEntitySpecialRenderer
 	        GlStateManager.translate(-1F, 0F, 0F);
 	        model.render();
 	        
-	        float angle = (holder.age + p_180535_8_) * 10F;
+	        float angle = (holder.age + partialTicks) * 10F;
 	        float scale = (float)Math.sin(angle * 0.01F);
 	        
 	        GlStateManager.pushMatrix();

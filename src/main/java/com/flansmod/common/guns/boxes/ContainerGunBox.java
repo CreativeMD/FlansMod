@@ -56,21 +56,15 @@ public class ContainerGunBox extends Container
 				}
 			}
 
-			if (slotStack.stackSize == 0)
-			{
-				currentSlot.putStack(null);
-			}
-			else
-			{
+			if (!slotStack.isEmpty())
 				currentSlot.onSlotChanged();
-			}
 
-			if (slotStack.stackSize == stack.stackSize)
+			if (slotStack.getCount() == stack.getCount())
 			{
-				return null;
+				return ItemStack.EMPTY;
 			}
 
-			currentSlot.onPickupFromSlot(player, slotStack);
+			currentSlot.onTake(player, slotStack);
 		}
 
 		return stack;

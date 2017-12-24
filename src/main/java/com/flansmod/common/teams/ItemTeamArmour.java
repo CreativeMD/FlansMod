@@ -4,12 +4,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
@@ -40,7 +45,7 @@ public class ItemTeamArmour extends ItemArmor implements ISpecialArmor, IFlanIte
 		GameRegistry.registerItem(this, type.shortName, FlansMod.MODID);
 	}
 	
-	public ItemTeamArmour(ItemArmor.ArmorMaterial armorMaterial, int renderIndex, int armourType) 
+	public ItemTeamArmour(ItemArmor.ArmorMaterial armorMaterial, int renderIndex, EntityEquipmentSlot armourType) 
 	{
 		super(armorMaterial, renderIndex, armourType);
 	}
@@ -64,13 +69,14 @@ public class ItemTeamArmour extends ItemArmor implements ISpecialArmor, IFlanIte
 	}
 
 	@Override
-	public String getArmorTexture(ItemStack itemstack, Entity entity, int slot, String s) 
+	public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String typeString)
 	{
-		return "flansmod:armor/" + type.armourTextureName + "_" + (type.type == 2 ? "2" : "1") + ".png";
+		return "flansmod:armor/" + type.armourTextureName + "_" + (type.type == EntityEquipmentSlot.LEGS ? "2" : "1") + ".png";
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer player, List lines, boolean b)
+	@SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> lines, ITooltipFlag flagIn)
 	{
 		if(type.description != null)
 		{
@@ -94,17 +100,17 @@ public class ItemTeamArmour extends ItemArmor implements ISpecialArmor, IFlanIte
 	}
     
     @Override
-    public Multimap getAttributeModifiers(ItemStack stack)
+    public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack)
     {
-       	Multimap map = super.getAttributeModifiers(stack);
-       	map.put(SharedMonsterAttributes.knockbackResistance.getAttributeUnlocalizedName(), new AttributeModifier(uuid[type.type], "KnockbackResist", type.knockbackModifier, 0));
-       	map.put(SharedMonsterAttributes.movementSpeed.getAttributeUnlocalizedName(), new AttributeModifier(uuid[type.type], "MovementSpeed", type.moveSpeedModifier - 1F, 2));
+       	Multimap<String, AttributeModifier> map = super.getAttributeModifiers(slot, stack);
+       	map.put(SharedMonsterAttributes.KNOCKBACK_RESISTANCE.getName(), new AttributeModifier(uuid[type.type.getIndex()], "KnockbackResist", type.knockbackModifier, 0));
+       	map.put(SharedMonsterAttributes.MOVEMENT_SPEED.getName(), new AttributeModifier(uuid[type.type.getIndex()], "MovementSpeed", type.moveSpeedModifier - 1F, 2));
        	return map;
     }
     
     @Override
     @SideOnly(Side.CLIENT)
-    public ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack itemStack, int armorSlot)
+    public net.minecraft.client.model.ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack itemStack, EntityEquipmentSlot armorSlot, net.minecraft.client.model.ModelBiped _default)
     {
         return type.model;
     }
@@ -119,9 +125,9 @@ public class ItemTeamArmour extends ItemArmor implements ISpecialArmor, IFlanIte
 	public void onArmorTick(World world, EntityPlayer player, ItemStack itemStack)
 	{
 		if(type.nightVision && FlansMod.ticker % 25 == 0)
-			player.addPotionEffect(new PotionEffect(Potion.nightVision.id, 250));
+			player.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, 250));
 		if(type.jumpModifier > 1.01F && FlansMod.ticker % 25 == 0)
-			player.addPotionEffect(new PotionEffect(Potion.jump.id, 250, (int)((type.jumpModifier - 1F) * 2F), true, false));
+			player.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, 250, (int)((type.jumpModifier - 1F) * 2F), true, false));
 		if(type.negateFallDamage)
 			player.fallDistance = 0F;
 	}

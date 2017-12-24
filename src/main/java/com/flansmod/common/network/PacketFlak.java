@@ -1,19 +1,22 @@
 package com.flansmod.common.network;
 
+import java.lang.reflect.Field;
 import java.util.Random;
+
+import com.flansmod.client.ClientRenderHooks;
+import com.flansmod.client.FlansModClient;
+import com.flansmod.common.FlansMod;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.flansmod.client.FlansModClient;
-import com.flansmod.common.FlansMod;
 
 public class PacketFlak extends PacketBase 
 {
@@ -60,21 +63,24 @@ public class PacketFlak extends PacketBase
 	{
 		FlansMod.log("Received flak packet on server. Disregarding.");
 	}
+	
+	
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void handleClientSide(EntityPlayer clientPlayer) 
 	{
-		World world = clientPlayer.worldObj;
+		World world = clientPlayer.world;
 		for (int i = 0; i < numParticles; i++)
 		{
-			EntityFX obj = FlansModClient.getParticle(particleType, world, x + rand.nextGaussian(), y + rand.nextGaussian(), z + rand.nextGaussian());
+			Particle obj = FlansModClient.getParticle(particleType, world, x + rand.nextGaussian(), y + rand.nextGaussian(), z + rand.nextGaussian());
 			if(obj != null)
 			{
-				obj.motionX = rand.nextGaussian() / 20;
-				obj.motionY = rand.nextGaussian() / 20;
-				obj.motionZ = rand.nextGaussian() / 20;
-				obj.renderDistanceWeight = 250D;
+				ClientRenderHooks.setMotionX(obj, rand.nextGaussian() / 20);
+				ClientRenderHooks.setMotionY(obj, rand.nextGaussian() / 20);
+				ClientRenderHooks.setMotionZ(obj, rand.nextGaussian() / 20);
+				
+				//obj.renderDistanceWeight = 250D;
 				FMLClientHandler.instance().getClient().effectRenderer.addEffect(obj);
 			}
 		}		

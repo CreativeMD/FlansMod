@@ -3,32 +3,26 @@ package com.flansmod.common.guns.boxes;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.flansmod.common.FlansMod;
+import com.flansmod.common.guns.GunType;
+import com.flansmod.common.guns.boxes.GunBoxType.GunBoxEntry;
+import com.flansmod.common.types.InfoType;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.flansmod.client.FlansModResourceHandler;
-import com.flansmod.common.FlansMod;
-import com.flansmod.common.guns.GunType;
-import com.flansmod.common.guns.boxes.GunBoxType.GunBoxEntry;
-import com.flansmod.common.types.InfoType;
 
 public class BlockGunBox extends Block
 {
@@ -36,7 +30,7 @@ public class BlockGunBox extends Block
 	
 	public BlockGunBox(GunBoxType t)
 	{
-		super(Material.wood);
+		super(Material.WOOD);
 		setHardness(2F);
 		setResistance(4F);
 		type = t;
@@ -61,12 +55,12 @@ public class BlockGunBox extends Block
 				for (int j = 0; j < inventory.getSizeInventory(); j++)
 				{
 					ItemStack stack = inventory.getStackInSlot(j);
-					if (stack != null && stack.getItem() == check.getItem() && stack.getItemDamage() == check.getItemDamage())
+					if (stack.getItem() == check.getItem() && stack.getItemDamage() == check.getItemDamage())
 					{
-						numMatchingStuff += stack.stackSize;
+						numMatchingStuff += stack.getCount();
 					}
 				}
-				if (numMatchingStuff < check.stackSize)
+				if (numMatchingStuff < check.getCount())
 				{
 					canBuy = false;
 				}
@@ -75,13 +69,13 @@ public class BlockGunBox extends Block
 			{
 				for (ItemStack remove : entry.requiredParts)
 				{
-					int amountLeft = remove.stackSize;
+					int amountLeft = remove.getCount();
 					for (int j = 0; j < inventory.getSizeInventory(); j++)
 					{
 						ItemStack stack = inventory.getStackInSlot(j);
-						if (amountLeft > 0 && stack != null && stack.getItem() == remove.getItem() && stack.getItemDamage() == remove.getItemDamage())
+						if (amountLeft > 0 && stack.getItem() == remove.getItem() && stack.getItemDamage() == remove.getItemDamage())
 						{
-							amountLeft -= inventory.decrStackSize(j, amountLeft).stackSize;
+							amountLeft -= inventory.decrStackSize(j, amountLeft).getCount();
 						}
 					}
 				}
@@ -104,7 +98,7 @@ public class BlockGunBox extends Block
 				if (!inventory.addItemStackToInventory(gunStack))
 				{
 					// Drop gun on floor
-					inventory.player.dropPlayerItemWithRandomChoice(gunStack, false);
+					inventory.player.dropItem(gunStack, false);
 				}
 			} else
 			{
@@ -115,12 +109,12 @@ public class BlockGunBox extends Block
 	}
 	
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float par7, float par8, float par9)
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
 	{
 		if(player.isSneaking())
 			return false;
 		if(!world.isRemote)
-		player.openGui(FlansMod.INSTANCE, 5, world, pos.getX(), pos.getY(), pos.getZ());
+			player.openGui(FlansMod.INSTANCE, 5, world, pos.getX(), pos.getY(), pos.getZ());
 		return true;
 	}
 	

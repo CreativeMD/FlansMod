@@ -1,9 +1,9 @@
 package com.flansmod.common.types;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
+
+import com.flansmod.common.FlansMod;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.model.ModelBase;
@@ -11,20 +11,15 @@ import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.WeightedRandomChestContent;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ChestGenHooks;
-import net.minecraftforge.common.DungeonHooks;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.flansmod.common.FlansMod;
-import com.flansmod.common.guns.Paintjob;
 
 public class InfoType
 {
@@ -471,13 +466,13 @@ public class InfoType
 	{
 		if (s.equals("doorIron"))
 		{
-			return new ItemStack(Items.iron_door, amount);
+			return new ItemStack(Items.IRON_DOOR, amount);
 		}
 		if (s.equals("clayItem"))
 		{
-			return new ItemStack(Items.clay_ball, amount);
+			return new ItemStack(Items.CLAY_BALL, amount);
 		}
-		for(Object object : Item.itemRegistry)
+		for(Object object : Item.REGISTRY)
 		{
 			Item item = (Item)object;
 			if (item != null && item.getUnlocalizedName() != null && (item.getUnlocalizedName().equals("item." + s) || item.getUnlocalizedName().equals("tile." + s)))
@@ -492,11 +487,11 @@ public class InfoType
 		}
 		if (s.equals("gunpowder"))
 		{
-			return new ItemStack(Items.gunpowder, amount);
+			return new ItemStack(Items.GUNPOWDER, amount);
 		}
 		if (s.equals("iron"))
 		{
-			return new ItemStack(Items.iron_ingot, amount);
+			return new ItemStack(Items.IRON_INGOT, amount);
 		}
 		FlansMod.log("Could not find " + s + " when adding recipe for " + requester);
 		return null;
@@ -544,12 +539,12 @@ public class InfoType
 		int potionID = Integer.parseInt(split[1]);
 		int duration = Integer.parseInt(split[2]);
 		int amplifier = Integer.parseInt(split[3]);
-		return new PotionEffect(potionID, duration, amplifier, false, false);
+		return new PotionEffect(Potion.getPotionById(potionID), duration, amplifier, false, false);
 	}
 	
 	public static Material getMaterial(String mat)
 	{
-		return Material.ground;
+		return Material.GROUND;
 	}
 
 	public void addDungeonLoot() 
@@ -565,7 +560,7 @@ public class InfoType
 	{
 		if(rawChance >= 1 || random.nextFloat() < rawChance)
 		{
-			int chance = MathHelper.ceiling_float_int(rawChance);
+			int chance = MathHelper.ceil(rawChance);
 			switch(random.nextInt(10))
 			{
 			case 0 : ChestGenHooks.addItem(ChestGenHooks.DUNGEON_CHEST, new WeightedRandomChestContent(new ItemStack(this.item), 1, 1, chance)); break;
