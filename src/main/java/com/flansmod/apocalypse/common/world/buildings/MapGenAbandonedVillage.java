@@ -57,7 +57,7 @@ public class MapGenAbandonedVillage extends MapGenStructure
 		xScaled += rand.nextInt(distance - something);
 		zScaled += rand.nextInt(distance - something);
 		
-		if(xAdjusted == xScaled && zAdjusted == zScaled && world.getWorldChunkManager().areBiomesViable(xAdjusted * 16 + 8, zAdjusted * 16 + 8, 0, villageSpawnBiomes))
+		if(xAdjusted == xScaled && zAdjusted == zScaled && world.getBiomeProvider().areBiomesViable(xAdjusted * 16 + 8, zAdjusted * 16 + 8, 0, villageSpawnBiomes))
 		{
 			return true;
 		}
@@ -84,7 +84,7 @@ public class MapGenAbandonedVillage extends MapGenStructure
 		{
 			super(x, z);
 			List list = StructureAbandonedVillagePieces.getStructureVillageWeightedPieceList(rand, i);
-			StructureAbandonedVillagePieces.Start start = new StructureAbandonedVillagePieces.Start(world.getWorldChunkManager(), 0, rand, (x << 4) + 2, (z << 4) + 2, list, i);
+			StructureAbandonedVillagePieces.Start start = new StructureAbandonedVillagePieces.Start(world.getBiomeProvider(), 0, rand, (x << 4) + 2, (z << 4) + 2, list, i);
             components.add(start);
             start.buildComponent(start, this.components, rand);
             List list1 = start.field_74930_j;
